@@ -23,15 +23,15 @@ export const permissionGroupModel:ModelAttributes = {
 export interface PermissionGroupEntry {
     id: string;
     type: 'GROUP'|'MACHINE';
-    sk?: string;
+    sk: string|null;
     data:string; // groupName || machineId
 }
 export interface PermissionGroup extends PermissionGroupEntry{
-    type:'GROUP',
-    sk:undefined,
+    type:'GROUP';
+    sk:null;
 
 }
 export interface PermissionGroupMachine extends PermissionGroupEntry {
-    type:'MACHINE',
-    sk:string
+    type:'MACHINE';
+    sk:string;
 }

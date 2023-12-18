@@ -129,10 +129,9 @@ export const login:RequestHandler = async (req, res) => {
 
 export const authenticate:RequestHandler = async (req, res, next) => {
     try {
-        const userId = req.headers.userId as string;
-        const accessToken = req.headers.accessToken as string;
-        const userType = req.headers.userType as UserType;
-
+        const userId = req.headers.userid as string;
+        const accessToken = req.headers.accesstoken as string;
+        const userType = req.headers.usertype as UserType;
         if (!userId || !accessToken) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
@@ -158,12 +157,12 @@ export const authenticate:RequestHandler = async (req, res, next) => {
 
 export const issueNewExternalAccessToken:RequestHandler = async (req, res) => {
     try {
-        const userId = req.headers.userId as string;
-        const userType = req.headers.userType as UserType;
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
 
         const externalUserId = req.params.userId;
         if (!userId || !userType || !externalUserId) {
-            res.status(400).json({ message: 'Missing required fields' });
+            res.status(400).json({ message: 'Missing required fields1' });
             return;
         }
         if (userType !== 'admin'){

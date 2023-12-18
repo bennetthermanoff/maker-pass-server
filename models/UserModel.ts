@@ -43,9 +43,9 @@ export type User = {
     name: string;
     email: string;
     password: string;
-    accessToken?: string;
+    accessToken: string|null;
     userType: UserType;
-    additionalInfo?: object;
-    preferences?: object;
+    additionalInfo: object|null;
+    preferences: object|null;
 }
 export type UserType = 'admin' | 'user' | 'technician';

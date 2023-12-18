@@ -25,18 +25,16 @@ export const machineModel:ModelAttributes = {
     enabled: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+        allowNull: false,
     },
     solenoidMode: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+        allowNull: false,
     },
     machineGroupId: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-            model: 'machineGroup',
-            key: 'id',
-        },
     },
     enableKey: {
         type: DataTypes.STRING,
@@ -45,31 +43,23 @@ export const machineModel:ModelAttributes = {
     lastUsedBy: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-            model: 'user',
-            key: 'id',
-        },
     },
     latestTagOutId: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-            model: 'tagOut',
-            key: 'id',
-        },
     },
 };
 
 export type Machine = {
     id: string;
     name: string;
-    photo?: string;
-    photoContentType?: string;
-    mqttTopic?: string;
+    photo: string|null;
+    photoContentType: string|null;
+    mqttTopic: string|null;
     enabled: boolean;
     solenoidMode: boolean;
-    machineGroupId?: string;
-    enableKey?: string;
-    lastUsedBy?: string;
-    latestTagOutId?: string;
+    machineGroupId: string|null;
+    enableKey: string|null;
+    lastUsedBy: string|null;
+    latestTagOutId: string|null;
 }

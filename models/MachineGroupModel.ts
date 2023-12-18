@@ -25,12 +25,12 @@ export const machineGroupModel:ModelAttributes = {
 export interface MachineGroupEntry {
     id: string;
     type:'GROUP'|'MACHINE'|'GEOFENCE';
-    sk?:string;
+    sk:string|null;
     data:string|GeoFence;
 }
 export interface MachineGroup extends MachineGroupEntry{
     type:'GROUP',
-    sk:undefined,
+    sk:null,
     data:string
 }
 export interface MachineGroupMachine extends MachineGroupEntry{

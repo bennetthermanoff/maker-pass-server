@@ -3,6 +3,7 @@ import { makerspaceConfig } from './MakerspaceConfig';
 import { sequelize } from './models';
 import { useUserRoutes } from './routes/userRoutes';
 import { usePingRoutes } from './routes/pingRoutes';
+import { useMachineRoutes } from './routes/machineRoutes';
 
 export const app = express();
 
@@ -19,6 +20,7 @@ app.use(express.json());
 
 useUserRoutes(app);
 usePingRoutes(app);
+useMachineRoutes(app);
 
 app.use(express.urlencoded({ extended: true }));
 

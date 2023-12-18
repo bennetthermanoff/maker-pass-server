@@ -32,7 +32,7 @@ export type Log ={
     id: string,
     type: string,
     message: string,
-    referenceId?: string,
-    referenceType?: string,
-    userId?: string,
+    referenceId: string|null,
+    referenceType: string|null,
+    userId: string|null,
 }

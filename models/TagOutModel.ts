@@ -49,7 +49,7 @@ export type TagOut = {
     machineId: string;
     userId: string;
     reason: string;
-    removedDate?: Date;
-    removedBy?: string;
-    removedReason?: string;
+    removedDate: Date|null;
+    removedBy: string|null;
+    removedReason: string|null;
 }
