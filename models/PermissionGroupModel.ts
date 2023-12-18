@@ -1,6 +1,6 @@
 import { DataTypes, ModelAttributes } from 'sequelize';
 
-export const accessGroupModel:ModelAttributes = {
+export const permissionGroupModel:ModelAttributes = {
     id: {
         type: DataTypes.STRING,
         primaryKey: true,
@@ -20,18 +20,18 @@ export const accessGroupModel:ModelAttributes = {
     },
 };
 
-export interface AccessGroupEntry {
+export interface PermissionGroupEntry {
     id: string;
     type: 'GROUP'|'MACHINE';
     sk?: string;
     data:string; // groupName || machineId
 }
-export interface AccessGroup extends AccessGroupEntry{
+export interface PermissionGroup extends PermissionGroupEntry{
     type:'GROUP',
     sk:undefined,
 
 }
-export interface AccessGroupMachine {
+export interface PermissionGroupMachine extends PermissionGroupEntry {
     type:'MACHINE',
     sk:string
 }

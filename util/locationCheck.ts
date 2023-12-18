@@ -1,6 +1,6 @@
 import {  MachineGroupGeoFence } from '../models/MachineGroupModel';
 
-export type location = {
+export type Location = {
     lat: number,
     lng: number,
 };
@@ -9,7 +9,7 @@ export type GeoFence = {
     lng: number,
     radius: number,
 };
-export const isLocationInAnyGeoFence = (location:location|undefined, machineGroupGeoFences:Array<MachineGroupGeoFence>) => {
+export const isLocationInAnyGeoFence = (location:Location|undefined, machineGroupGeoFences:Array<MachineGroupGeoFence>) => {
     if (machineGroupGeoFences.length == 0){
         return true;
     }
@@ -23,12 +23,15 @@ export const isLocationInAnyGeoFence = (location:location|undefined, machineGrou
     }
     return false;
 };
-export const isLocationInGeoFence = (location:location, geoFenceCoordinate:GeoFence) => {
+export const isLocationInGeoFence = (location:Location|undefined, geoFenceCoordinate:GeoFence) => {
+    if (!location){
+        return false;
+    }
     const distance = getDistanceBetweenPoints(location, geoFenceCoordinate);
     return distance <= geoFenceCoordinate.radius;
 };
 // https://www.movable-type.co.uk/scripts/latlong.html
-const getDistanceBetweenPoints = (location1:location, location2:location) => {
+const getDistanceBetweenPoints = (location1:Location, location2:Location) => {
     const R = 6371e3; // metres
     const φ1 = toRadians(location1.lat);
     const φ2 = toRadians(location2.lat);

@@ -22,6 +22,10 @@ export const machineModel:ModelAttributes = {
         type: DataTypes.STRING,
         allowNull: true,
     },
+    enabled: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     solenoidMode: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -34,7 +38,7 @@ export const machineModel:ModelAttributes = {
             key: 'id',
         },
     },
-    tapUnlockKey: {
+    enableKey: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -62,9 +66,10 @@ export type Machine = {
     photo?: string;
     photoContentType?: string;
     mqttTopic?: string;
+    enabled: boolean;
     solenoidMode: boolean;
     machineGroupId?: string;
-    tapUnlockKey?: string;
+    enableKey?: string;
     lastUsedBy?: string;
     latestTagOutId?: string;
 }
