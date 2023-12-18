@@ -33,9 +33,8 @@ export const register:RequestHandler = async (req, res) => {
             return;
         }
 
-        switch (registerBody.registrationType) {
-        case 'admin':{
-            if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword)) {
+        if (registerBody.registrationType === 'admin'){
+            if (!registerBody.registrationKey || !bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword)) {
                 res.status(400).json({ message: 'Invalid registration key' });
                 return;
             }
@@ -43,7 +42,7 @@ export const register:RequestHandler = async (req, res) => {
                 name: registerBody.name,
                 email: registerBody.email,
                 password: bcrypt.hashSync(registerBody.password, 12),
-                admin: true,
+                userType:'admin',
                 additionalInfo: registerBody.additionalInfo,
             });
             const newUser = await UserDB.findOne({ where: { email:registerBody.email } }).then((user) => user?.toJSON()) as User;
@@ -55,9 +54,8 @@ export const register:RequestHandler = async (req, res) => {
             res.status(200).json({ message:'Admin user created!' });
             return;
         }
-        case 'user':{
+        else if (registerBody.registrationType === 'user'){
             const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => geoFence.toJSON() as MachineGroupGeoFence));
-
             if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
                 res.status(400).json({ message: 'Invalid location' });
                 return;
@@ -83,10 +81,9 @@ export const register:RequestHandler = async (req, res) => {
             return;
 
         }
-        default:{
+        else {
             res.status(400).json({ message: 'Invalid registration type' });
             return;
-        }
         }
 
     } catch (error) {
@@ -130,27 +127,25 @@ export const login:RequestHandler = async (req, res) => {
     }
 };
 
-export type AuthenticateBody = {
-    userId: string;
-    accessToken: string;
-    userType: UserType;
-};
 export const authenticate:RequestHandler = async (req, res, next) => {
     try {
-        const authenticateBody:AuthenticateBody = req.body;
-        if (!authenticateBody.userId || !authenticateBody.accessToken) {
+        const userId = req.headers.userId as string;
+        const accessToken = req.headers.accessToken as string;
+        const userType = req.headers.userType as UserType;
+
+        if (!userId || !accessToken) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
 
-        const user = await UserDB.findOne({ where: { id: authenticateBody.userId, userType:authenticateBody.userType } }).then((user) => user?.toJSON()) as User;
+        const user = await UserDB.findOne({ where: { id: userId, userType:userType } }).then((user) => user?.toJSON()) as User;
 
         if (!user) {
             res.status(400).json({ message: 'User not found' });
             return;
         }
 
-        if (bcrypt.compareSync(authenticateBody.accessToken, user.accessToken ? user.accessToken : '')) {
+        if (bcrypt.compareSync(accessToken, user.accessToken ? user.accessToken : '')) {
             next();
         } else {
             res.status(400).json({ message: 'Invalid access token' });
@@ -161,16 +156,17 @@ export const authenticate:RequestHandler = async (req, res, next) => {
     }
 };
 
-interface IssueNewExternalAccessTokenBody extends AuthenticateBody {}
 export const issueNewExternalAccessToken:RequestHandler = async (req, res) => {
     try {
-        const issueNewExternalAccessTokenBody:IssueNewExternalAccessTokenBody = req.body;
+        const userId = req.headers.userId as string;
+        const userType = req.headers.userType as UserType;
+
         const externalUserId = req.params.userId;
-        if (!issueNewExternalAccessTokenBody.userId || !issueNewExternalAccessTokenBody.userType || !externalUserId) {
+        if (!userId || !userType || !externalUserId) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        if (issueNewExternalAccessTokenBody.userType !== 'admin'){
+        if (userType !== 'admin'){
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
@@ -179,19 +175,19 @@ export const issueNewExternalAccessToken:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'External user not found' });
             return;
         }
-        const accessToken = uuidv4();
-        const encryptedAccessToken = bcrypt.hashSync(accessToken, 12);
-        await UserDB.update({ accessToken: encryptedAccessToken }, { where: { id: externalUser.id } });
+        const newAccessToken = uuidv4();
+        const encryptedNewAccessToken = bcrypt.hashSync(newAccessToken, 12);
+        await UserDB.update({ accessToken: encryptedNewAccessToken }, { where: { id: externalUser.id } });
 
         LogDB.create({
             type:'Token Issued',
             message:`An external access token was issued for ${externalUser.name}.`,
-            userId:issueNewExternalAccessTokenBody.userId,
+            userId:userId,
             referenceId:externalUser.id,
             referenceType:'user',
         });
 
-        res.status(200).json({ accessToken });
+        res.status(200).json({ accessToken: newAccessToken });
         return;
 
     }

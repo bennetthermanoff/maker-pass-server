@@ -11,10 +11,6 @@ export const app = express();
 // };
 const PORT = makerspaceConfig.serverPort || 3000;
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
-});
-
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the Tulane Makerspace!' });
 });
@@ -27,4 +23,8 @@ usePingRoutes(app);
 app.use(express.urlencoded({ extended: true }));
 
 sequelize.sync();
+
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}.`);
+});
 

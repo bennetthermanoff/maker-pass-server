@@ -5,16 +5,19 @@ import { v4 as UUIDV4 } from 'uuid';
 import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
-import { User } from '../models/UserModel';
+import { User, UserType } from '../models/UserModel';
 import { MachineGroupGeoFence } from '../models/MachineGroupModel';
 import { isLocationInGeoFence, Location } from '../util/locationCheck';
 
-interface createMachineBody extends AuthenticateBody {
+interface createMachineBody {
     machine:Partial<Machine>;
     requireEnableKey?: boolean;
 }
 export const createMachine:RequestHandler = async (req,res) => {
     try {
+        const userId = req.headers.userId as string;
+        const userType = req.headers.userType as UserType;
+
         const createMachineBody:createMachineBody = req.body;
         if (!createMachineBody.machine.name && !createMachineBody.machine.solenoidMode) {
             res.status(400).json({ message: 'Missing required fields' });
@@ -24,7 +27,7 @@ export const createMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        if (createMachineBody.userType !== 'admin'){
+        if (userType !== 'admin'){
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
@@ -35,7 +38,7 @@ export const createMachine:RequestHandler = async (req,res) => {
         });
         const machine = await MachineDB.findOne({ where: { name: createMachineBody.machine.name } }).then((machine) => machine?.toJSON()) as Machine;
         await LogDB.create({
-            userId: createMachineBody.userId,
+            userId: userId,
             action: 'CREATE_MACHINE',
             data: JSON.stringify(machine),
         });
@@ -45,12 +48,15 @@ export const createMachine:RequestHandler = async (req,res) => {
     }
 };
 
-interface updateMachineBody extends AuthenticateBody {
+interface updateMachineBody {
     machineUpdates:Partial<Machine>;
     requireEnableKey?: boolean;
 }
 export const updateMachine:RequestHandler = async (req,res) => {
     try {
+        const userId = req.headers.userId as string;
+        const userType = req.headers.userType as UserType;
+
         const updateMachineBody:updateMachineBody = req.body;
         const machineId = req.params.machineId;
         if (!machineId) {
@@ -66,7 +72,7 @@ export const updateMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Solenoid Mode requires MQTT' });
             return;
         }
-        if (updateMachineBody.userType !== 'admin'){
+        if (userType !== 'admin'){
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
@@ -77,7 +83,7 @@ export const updateMachine:RequestHandler = async (req,res) => {
         });
         const updatedMachine = await MachineDB.findOne({ where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         await LogDB.create({
-            userId: updateMachineBody.userId,
+            userId: userId,
             action: 'UPDATE_MACHINE',
             data: JSON.stringify(updatedMachine),
         });
@@ -182,19 +188,22 @@ export const getPermittedMachineIdsRoute:RequestHandler = async (req,res) => {
     }
 };
 
-interface EnableMachineBody extends AuthenticateBody {
+interface EnableMachineBody {
     enableKey?:string;
     location?:Location;
 }
 export const enableMachine:RequestHandler = async (req,res) => {
     try {
+        const userId = req.headers.userId as string;
+        const userType = req.headers.userType as UserType;
+
         const machineId = req.params.machineId;
         const body = req.body as EnableMachineBody;
         if (!machineId) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const user = await UserDB.findOne({ where: { id: body.userId } }).then((user) => user?.toJSON()as User);
+        const user = await UserDB.findOne({ where: { id: userId } }).then((user) => user?.toJSON()as User);
         if (!user){
             res.status(400).json({ message: 'User not found' });
             return;
@@ -204,7 +213,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Machine not found' });
             return;
         }
-        if (machine.enableKey && machine.enableKey !== body.enableKey && user.userType == 'user'){
+        if (machine.enableKey && machine.enableKey !== body.enableKey && userType == 'user'){
             res.status(400).json({ message: 'Invalid enable key' });
             return;
         }
@@ -213,7 +222,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Invalid location' });
             return;
         }
-        const permittedMachineIds = await getPermittedMachineIds(body.userId);
+        const permittedMachineIds = await getPermittedMachineIds(userId);
         if (!permittedMachineIds.includes(machineId)){
             res.status(400).json({ message: 'User not permitted to enable machine' });
             return;
@@ -222,7 +231,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
         await MachineDB.update({ enabled: true }, { where: { id: machineId } });
         // TODO: MQTT ENABLE HERE
         await LogDB.create({
-            userId: body.userId,
+            userId: userId,
             action: 'ENABLE_MACHINE',
             data: machineId,
         });
@@ -235,13 +244,16 @@ export const enableMachine:RequestHandler = async (req,res) => {
 interface DisableMachineBody extends EnableMachineBody {}
 export const disableMachine:RequestHandler = async (req,res) => {
     try {
+        const userId = req.headers.userId as string;
+        const userType = req.headers.userType as UserType;
+
         const machineId = req.params.machineId;
         const body = req.body as DisableMachineBody;
         if (!machineId) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const user = await UserDB.findOne({ where: { id: body.userId } }).then((user) => user?.toJSON()as User);
+        const user = await UserDB.findOne({ where: { id: userId } }).then((user) => user?.toJSON()as User);
         if (!user){
             res.status(400).json({ message: 'User not found' });
             return;
@@ -252,14 +264,14 @@ export const disableMachine:RequestHandler = async (req,res) => {
             return;
         }
         const geoFence = await MachineGroupDB.findOne({ where: { id: machine.machineGroupId, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
-        if (geoFence && !isLocationInGeoFence(body.location, geoFence.data) && user.userType == 'user'){
+        if (geoFence && !isLocationInGeoFence(body.location, geoFence.data) && userType == 'user'){
             res.status(400).json({ message: 'Invalid location' });
             return;
         }
         await MachineDB.update({ enabled: false }, { where: { id: machineId } });
         //TODO: MQTT DISABLE HERE
         await LogDB.create({
-            userId: body.userId,
+            userId: userId,
             action: 'DISABLE_MACHINE',
             data: machineId,
         });
