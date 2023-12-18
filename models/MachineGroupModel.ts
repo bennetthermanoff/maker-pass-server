@@ -31,16 +31,16 @@ export interface MachineGroupEntry {
 export interface MachineGroup extends MachineGroupEntry{
     type:'GROUP',
     sk:null,
-    data:string
+    data:string //name
 }
 export interface MachineGroupMachine extends MachineGroupEntry{
     type:'MACHINE',
-    sk:string,
-    data:string
+    sk:string, //groupId
+    data:string //machineId
 }
 export interface MachineGroupGeoFence extends MachineGroupEntry{
     type:'GEOFENCE',
-    sk:string,
-    data:GeoFence
+    sk:string, //groupId
+    data:GeoFence //geoFenceCoordinate
 }
 

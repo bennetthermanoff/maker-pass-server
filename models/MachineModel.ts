@@ -32,10 +32,6 @@ export const machineModel:ModelAttributes = {
         defaultValue: false,
         allowNull: false,
     },
-    machineGroupId: {
-        type: DataTypes.STRING,
-        allowNull: true,
-    },
     enableKey: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -58,7 +54,6 @@ export type Machine = {
     mqttTopic: string|null;
     enabled: boolean;
     solenoidMode: boolean;
-    machineGroupId: string|null;
     enableKey: string|null;
     lastUsedBy: string|null;
     latestTagOutId: string|null;

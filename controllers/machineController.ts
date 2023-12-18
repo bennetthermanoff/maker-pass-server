@@ -5,7 +5,7 @@ import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
-import { MachineGroupGeoFence } from '../models/MachineGroupModel';
+import { MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
 import { isLocationInGeoFence, Location } from '../util/locationCheck';
 
 interface createMachineBody {
@@ -255,7 +255,8 @@ export const enableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Invalid enable key' });
             return;
         }
-        const geoFence = await MachineGroupDB.findOne({ where: { id: machine.machineGroupId, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
+        const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
+        const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
         if (geoFence && !isLocationInGeoFence(body.location, geoFence.data)){
             res.status(400).json({ message: 'Invalid location' });
             return;
@@ -303,7 +304,8 @@ export const disableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Machine not found' });
             return;
         }
-        const geoFence = await MachineGroupDB.findOne({ where: { id: machine.machineGroupId, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
+        const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
+        const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
         if (geoFence && !isLocationInGeoFence(body.location, geoFence.data) && userType == 'user'){
             res.status(400).json({ message: 'Invalid location' });
             return;
@@ -358,7 +360,8 @@ export const disableAllMachinesByGroupId:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
-        await MachineDB.update({ enabled: false }, { where: { machineGroupId } });
+        const machineGroupMachineIds = await MachineGroupDB.findAll({ where: { sk: machineGroupId, type: 'MACHINE' } }).then((machineGroups) => machineGroups.map((machineGroup) => (machineGroup.toJSON() as MachineGroupMachine).data));
+        await MachineDB.update({ enabled: false }, { where: { id: machineGroupMachineIds } });
         //TODO: MQTT DISABLE HERE
         await LogDB.create({
             type: 'DISABLE_ALL_MACHINES',
