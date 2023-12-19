@@ -4,6 +4,7 @@ import { sequelize } from './models';
 import { useUserRoutes } from './routes/userRoutes';
 import { usePingRoutes } from './routes/pingRoutes';
 import { useMachineRoutes } from './routes/machineRoutes';
+import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
 
 export const app = express();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 useUserRoutes(app);
 usePingRoutes(app);
 useMachineRoutes(app);
+usePermissionGroupRoutes(app);
 
 app.use(express.urlencoded({ extended: true }));
 
