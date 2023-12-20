@@ -22,19 +22,10 @@ export const makerspaceConfig:MakerspaceConfig = {
     registrationPassword: '$2a$12$beYcV/mUYD7vGQqYj4sZDe0B/dXPHOFB.Rus.6iDaGPzNc9ISWMZm',
 
     // Theme options
+    // https://tamagui.dev/docs/intro/colors
     theme:{
-        light:{
-            primary: '#3f51b5',
-            secondary: '#b0bec5',
-            accent: '#8c9eff',
-            error: '#b71c1c',
-        },
-        dark:{
-            primary: '#3f51b5',
-            secondary: '#b0bec5',
-            accent: '#8c9eff',
-            error: '#b71c1c',
-        },
+        primary:'green',
+        secondary:'blue',
     },
 };
 
@@ -47,17 +38,7 @@ type MakerspaceConfig = {
     adminPassword: string,
     registrationPassword: string,
     theme: {
-        light: {
-            primary: string,
-            secondary: string,
-            accent: string,
-            error: string,
-        },
-        dark: {
-            primary: string,
-            secondary: string,
-            accent: string,
-            error: string,
-        },
-    },
+        primary: string,
+        secondary: string,
+    }
 };
