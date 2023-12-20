@@ -1,4 +1,8 @@
 export const makerspaceConfig:MakerspaceConfig = {
+
+    // a unique id for this makerspace, generate one at https://www.uuidgenerator.net/
+    id:'d4b6e215-f616-425a-bdc3-527a7f9a7605',
+
     // The name of the makerspace
     name: 'Tulane Makerspace',
 
@@ -9,7 +13,7 @@ export const makerspaceConfig:MakerspaceConfig = {
     serverAddress: 'https://makerPass.tulane.edu',
 
     // The port of this server
-    serverPort: 3000,
+    serverPort: 8080,
 
     // Password for creating an admin account, encrypted with bcrypt (https://bcrypt-generator.com/). Default is 'admin'
     adminPassword: '$2a$12$i8R0af71zAH06EStCI1ApOexcQR0Lzi9hO5Ct/004IJzsKVs.IJna',
@@ -35,6 +39,7 @@ export const makerspaceConfig:MakerspaceConfig = {
 };
 
 type MakerspaceConfig = {
+    id: string,
     name: string,
     website?: string,
     serverAddress: string,
