@@ -6,6 +6,7 @@ import { isLocationInAnyGeoFence } from '../util/locationCheck';
 import { MachineGroupGeoFence } from '../models/MachineGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 
 type RegisterBody = {
     name: string;
@@ -32,6 +33,7 @@ export const register:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'Email already in use' });
             return;
         }
+        registerBody.email = registerBody.email.toLowerCase();
 
         if (registerBody.registrationType === 'admin'){
             if (!registerBody.registrationKey || !bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword)) {
@@ -102,8 +104,8 @@ export const login:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-
-        const user = await UserDB.findOne({ where: { email: loginBody.email } }).then((user) => user?.toJSON()) as User;
+        //case insensitive search
+        const user = await UserDB.findOne({ where: { email:{ [Op.like]:loginBody.email } } }).then((user) => user?.toJSON()) as User;
 
         if (!user) {
             res.status(400).json({ message: 'User not found' });
@@ -111,11 +113,11 @@ export const login:RequestHandler = async (req, res) => {
         }
 
         if (bcrypt.compareSync(loginBody.password, user.password)) {
-            const accessToken = uuidv4();
-            const encryptedAccessToken = bcrypt.hashSync(accessToken, 12);
+            const token = uuidv4();
+            const encryptedAccessToken = bcrypt.hashSync(token, 12);
             await UserDB.update({ accessToken: encryptedAccessToken }, { where: { id: user.id } });
 
-            res.status(200).json({ accessToken });
+            res.status(200).json({ token, userType:user.userType, userId:user.id });
             return;
 
         } else {

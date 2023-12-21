@@ -10,7 +10,7 @@ export const makerspaceConfig:MakerspaceConfig = {
     website: 'https://makerspace.tulane.edu',
 
     // The server address of this server
-    serverAddress: 'https://makerPass.tulane.edu',
+    serverAddress: '192.168.1.173',
 
     // The port of this server
     serverPort: 8080,
