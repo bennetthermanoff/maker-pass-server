@@ -5,7 +5,7 @@ import { useUserRoutes } from './routes/userRoutes';
 import { usePingRoutes } from './routes/pingRoutes';
 import { useMachineRoutes } from './routes/machineRoutes';
 import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
-
+import qrCode from 'qrcode-terminal';
 export const app = express();
 
 // const corsOptions = {
@@ -30,5 +30,9 @@ sequelize.sync();
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
+});
+
+qrCode.generate(`exp://test:${makerspaceConfig.serverPort}/--/makerspace/config?url=${makerspaceConfig.serverAddress}&port=${makerspaceConfig.serverPort}`, { small: true }, (qrCode) => {
+    console.log(qrCode);
 });
 

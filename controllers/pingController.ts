@@ -10,6 +10,7 @@ export const pingServer:RequestHandler = async (req,res) => {
             serverAddress:makerspaceConfig.serverAddress,
             serverPort:makerspaceConfig.serverPort,
             theme:makerspaceConfig.theme,
+            additionalInfoFields:makerspaceConfig.additionalInfoFields,
 
         } });
 };

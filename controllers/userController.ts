@@ -28,7 +28,10 @@ export const register:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-
+        if (RegExp('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$').test(registerBody.email) === false) {
+            res.status(400).json({ message: 'Invalid email' });
+            return;
+        }
         if (await UserDB.findOne({ where: { email: registerBody.email } }).then((user) => user?.toJSON()) as User) {
             res.status(400).json({ message: 'Email already in use' });
             return;
