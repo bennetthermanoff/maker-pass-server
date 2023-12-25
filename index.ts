@@ -29,10 +29,11 @@ app.use(express.urlencoded({ extended: true }));
 sequelize.sync();
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}.`);
+    console.log(`Server is running on ${makerspaceConfig.serverAddress} port ${PORT}.`);
+
 });
 
-qrCode.generate(`exp://test:${makerspaceConfig.serverPort}/--/makerspace/config?url=${makerspaceConfig.serverAddress}&port=${makerspaceConfig.serverPort}`, { small: true }, (qrCode) => {
+qrCode.generate(`exp://test:${makerspaceConfig.serverPort}/--/makerspace/config?url=${makerspaceConfig.serverAddress}&port=${makerspaceConfig.serverPort}&registrationType=admin&registrationKey=${makerspaceConfig.adminPassword}`, { small: true }, (qrCode) => {
     console.log(qrCode);
 });
 

@@ -10,16 +10,16 @@ export const makerspaceConfig:MakerspaceConfig = {
     website: 'https://makerspace.tulane.edu',
 
     // The server address of this server
-    serverAddress: 'http://192.168.1.173',
+    serverAddress: 'http://localhost',
 
     // The port of this server
     serverPort: 8080,
 
-    // Password for creating an admin account, encrypted with bcrypt (https://bcrypt-generator.com/). Default is 'admin'
-    adminPassword: '$2a$12$i8R0af71zAH06EStCI1ApOexcQR0Lzi9hO5Ct/004IJzsKVs.IJna',
+    // Password for creating an admin account
+    adminPassword: 'admin',
 
-    // Registration password for creating a user account, encrypted with bcrypt (https://bcrypt-generator.com/). Default is 'register'
-    registrationPassword: '$2a$12$beYcV/mUYD7vGQqYj4sZDe0B/dXPHOFB.Rus.6iDaGPzNc9ISWMZm',
+    // Registration password for creating a user account
+    registrationPassword: 'register',
 
     // Theme options
     // https://tamagui.dev/docs/intro/colors
@@ -103,7 +103,7 @@ export const makerspaceConfig:MakerspaceConfig = {
     {
         name: 'Birthday',
         type: 'date',
-        required: false,
+        required: true,
     },
     {
         name:'I agree to the terms and conditions',
@@ -121,7 +121,7 @@ export const makerspaceConfig:MakerspaceConfig = {
             'Social Media',
             'Other',
         ],
-        required: false,
+        required: true,
     },
     {
         name:'text',

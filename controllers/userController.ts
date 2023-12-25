@@ -39,7 +39,7 @@ export const register:RequestHandler = async (req, res) => {
         registerBody.email = registerBody.email.toLowerCase();
 
         if (registerBody.registrationType === 'admin'){
-            if (!registerBody.registrationKey || !bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword)) {
+            if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.adminPassword) {
                 res.status(400).json({ message: 'Invalid registration key' });
                 return;
             }
@@ -66,13 +66,15 @@ export const register:RequestHandler = async (req, res) => {
                 return;
             }
 
-            if (!registerBody.registrationKey || !bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.registrationPassword)) {
+            if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.registrationPassword && registerBody.registrationKey !== makerspaceConfig.adminPassword) {
                 res.status(400).json({ message: 'Invalid registration key' });
                 return;
             }
+
             UserDB.create({
                 name: registerBody.name,
                 email: registerBody.email,
+                userType:'user',
                 password: bcrypt.hashSync(registerBody.password, 12),
                 additionalInfo: registerBody.additionalInfo,
             });
@@ -90,8 +92,8 @@ export const register:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'Invalid registration type' });
             return;
         }
-
-    } catch (error) {
+    }
+    catch (error) {
         res.status(500).json({ message: error });
     }
 };
