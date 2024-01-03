@@ -13,7 +13,7 @@ export const useMachineRoutes = (router:Express) => {
     router.delete   (URL_BASE + '/single/:machineId', authenticate, machineController.deleteMachine);
     router.get      (URL_BASE + '/permitted/:userId', authenticate, machineController.getPermittedMachineIdsRoute);
     router.post     (URL_BASE + '/enable/single/:machineId', authenticate, machineController.enableMachine);
-    router.post     (URL_BASE + '/disable/single/:machineId', authenticate, machineController.disableMachine);
+    router.get     (URL_BASE + '/disable/single/:machineId', authenticate, machineController.disableMachine);
     router.post     (URL_BASE + '/disable/all', authenticate, machineController.disableAllMachines);
     router.post     (URL_BASE + '/disable/group/:groupId', authenticate, machineController.disableAllMachinesByGroupId);
 };

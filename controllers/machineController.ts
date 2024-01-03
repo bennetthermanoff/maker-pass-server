@@ -12,7 +12,7 @@ interface createMachineBody {
     machine:Partial<Machine>;
     requireEnableKey?: boolean;
 }
-export const createMachine:RequestHandler = async (req,res) => {
+export const  createMachine:RequestHandler = async (req,res) => {
     try {
         const userId = req.headers.userid as string;
         const userType = req.headers.usertype as UserType;
@@ -324,7 +324,9 @@ export const disableMachine:RequestHandler = async (req,res) => {
             referenceType: 'MACHINE',
             userId: userId,
         });
-        res.status(200).json({ message: 'Machine disabled', machine });
+        const updatedMachine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
+
+        res.status(200).json({ message: 'Machine disabled', machine:updatedMachine });
     } catch (e) {
         res.status(500).json({ message: e });
     }

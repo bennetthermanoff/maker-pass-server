@@ -140,21 +140,21 @@ export const authenticate:RequestHandler = async (req, res, next) => {
         const accessToken = req.headers.accesstoken as string;
         const userType = req.headers.usertype as UserType;
         if (!userId || !accessToken) {
-            res.status(400).json({ message: 'Missing required fields' });
+            res.status(401).json({ message: 'Missing required fields' });
             return;
         }
 
         const user = await UserDB.findOne({ where: { id: userId, userType:userType } }).then((user) => user?.toJSON()) as User;
 
         if (!user) {
-            res.status(400).json({ message: 'User not found' });
+            res.status(401).json({ message: 'User not found' });
             return;
         }
 
         if (bcrypt.compareSync(accessToken, user.accessToken ? user.accessToken : '')) {
             next();
         } else {
-            res.status(400).json({ message: 'Invalid access token' });
+            res.status(401).json({ message: 'Invalid access token' });
             return;
         }
     } catch (e) {
