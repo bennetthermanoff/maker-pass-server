@@ -22,14 +22,14 @@ export const  createMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        if (createMachineBody.machine.solenoidMode === true && !createMachineBody.machine.mqttTopic){
-            res.status(400).json({ message: 'Missing required fields: mqttTopic' });
-            return;
-        }
         if (userType !== 'admin'){
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
+        if (createMachineBody.machine.photo){
+            createMachineBody.machine.photoHash = UUIDV4();
+        }
+
         await MachineDB.create({
             ...createMachineBody.machine,
             enableKey: createMachineBody.requireEnableKey ? UUIDV4() : null,
@@ -80,6 +80,9 @@ export const updateMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
+        if (updateMachineBody.machine.photo){
+            updateMachineBody.machine.photoHash = UUIDV4();
+        }
         MachineDB.update({
             ...updateMachineBody.machine,
             enableKey:updateMachineBody.requireEnableKey || machine.enableKey ? UUIDV4() : null,
@@ -87,7 +90,6 @@ export const updateMachine:RequestHandler = async (req,res) => {
         });
         const updatedMachine = await MachineDB.findOne({ where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         updatedMachine.photo = null;
-        updatedMachine.photoContentType = null;
         await LogDB.create({
             userId: userId,
             type: 'UPDATE_MACHINE',
@@ -111,7 +113,7 @@ export const getMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Missing required fields' });
             return;
         }
-        const machine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => {
+        const machine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => {
             const jsonMachine:Machine|undefined = machine?.toJSON();
             if (jsonMachine?.enableKey && userType !== 'admin'){
                 jsonMachine.enableKey = null;
@@ -128,37 +130,26 @@ export const getMachine:RequestHandler = async (req,res) => {
     }
 };
 
-export const getAllMachines = ({ sendPhotos }:{sendPhotos:boolean}):RequestHandler  => async (req,res) => {
+export const getAllMachines = ({ sendPhotos }:{sendPhotos?:boolean}):RequestHandler  => async (req,res) => {
     try {
         const userType = req.headers.usertype as UserType;
-        const machines = await MachineDB.findAll(sendPhotos ? {} : { attributes: { exclude:['photo','photoContentType'] } }).then((machines) => machines.map((machine) => {
+        const machines = await MachineDB.findAll(sendPhotos ? {} : { attributes: { exclude:['photo'] } }).then((machines) => machines.map((machine) => {
             const jsonMachine:Machine = machine.toJSON();
             if (jsonMachine.enableKey && userType !== 'admin'){
                 jsonMachine.enableKey = null;
             }
             return jsonMachine;
         })) as Machine[];
-        res.status(200).json({ machines });
-    } catch (e) {
-        res.status(500).json({ message: e });
-    }
-};
+        const users = await UserDB.findAll({ where: { id: machines.map((machine) => machine.lastUsedBy) } }).then((users) => users.map((user) => user.toJSON())) as User[];
+        const userNameMap:{[key:string]:string} = {};
+        users.forEach((user) => {
+            userNameMap[user.id] = user.name;
+        });
 
-export const getMachinesByGroupId:RequestHandler = async (req,res) => {
-    try {
-        const userType = req.headers.usertype as UserType;
-        const machineGroupId = req.params.groupId;
-        if (!machineGroupId) {
-            res.status(400).json({ message: 'Missing required fields' });
-            return;
-        }
-        const machines = await MachineDB.findAll({ attributes: { exclude:['photo','photoContentType'] }, where: { machineGroupId } }).then((machines) => machines.map((machine) => {
-            const jsonMachine:Machine = machine.toJSON();
-            if (jsonMachine.enableKey && userType !== 'admin'){
-                jsonMachine.enableKey = null;
-            }
-            return jsonMachine;
-        }));
+        machines.forEach((machine) => {
+            machine.lastUsedBy = machine.lastUsedBy ? userNameMap[machine.lastUsedBy] : null;
+        });
+
         res.status(200).json({ machines });
     } catch (e) {
         res.status(500).json({ message: e });
@@ -178,7 +169,7 @@ export const deleteMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Invalid user type' });
             return;
         }
-        const machine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
+        const machine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         if (!machine){
             res.status(400).json({ message: 'Machine not found' });
             return;
@@ -246,7 +237,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'User not found' });
             return;
         }
-        const machine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
+        const machine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         if (!machine){
             res.status(400).json({ message: 'Machine not found' });
             return;
@@ -270,7 +261,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
             return;
         }
         // TODO: MQTT ENABLE HERE
-        await MachineDB.update({ enabled: true }, { where: { id: machineId } });
+        await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
         await LogDB.create({
             type: 'ENABLE_MACHINE',
             message: JSON.stringify(machine),
@@ -302,7 +293,7 @@ export const disableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'User not found' });
             return;
         }
-        const machine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
+        const machine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         if (!machine){
             res.status(400).json({ message: 'Machine not found' });
             return;
@@ -324,7 +315,7 @@ export const disableMachine:RequestHandler = async (req,res) => {
             referenceType: 'MACHINE',
             userId: userId,
         });
-        const updatedMachine = await MachineDB.findOne({ attributes: { exclude:['photo','photoContentType'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
+        const updatedMachine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
 
         res.status(200).json({ message: 'Machine disabled', machine:updatedMachine });
     } catch (e) {

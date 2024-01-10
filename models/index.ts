@@ -10,7 +10,7 @@ import { userPermissionModel } from './UserPermissionModel';
 export const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: './db.sqlite',
-    logging: false,
+    logging: true,
 });
 
 export const UserDB = sequelize.define('user', userModel);

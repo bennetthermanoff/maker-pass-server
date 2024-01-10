@@ -14,7 +14,7 @@ export const machineModel:ModelAttributes = {
         type: DataTypes.STRING,
         allowNull: true,
     },
-    photoContentType: {
+    photoHash: {
         type: DataTypes.STRING,
         allowNull: true,
     },
@@ -50,7 +50,7 @@ export type Machine = {
     id: string;
     name: string;
     photo: string|null;
-    photoContentType: string|null;
+    photoHash: string|null;
     mqttTopic: string|null;
     enabled: boolean;
     solenoidMode: boolean;

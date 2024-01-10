@@ -8,8 +8,7 @@ export const useMachineRoutes = (router:Express) => {
     router.patch    (URL_BASE + '/single/:machineId', authenticate, machineController.updateMachine);
     router.get      (URL_BASE + '/single/:machineId', authenticate, machineController.getMachine);
     router.get      (URL_BASE + '/all', authenticate, machineController.getAllMachines({ sendPhotos: false }));
-    router.get      (URL_BASE + '/photos/', authenticate, machineController.getAllMachines({ sendPhotos: true }));
-    router.get      (URL_BASE + '/group/:groupId', authenticate, machineController.getMachinesByGroupId);
+    router.get      (URL_BASE + '/all/photos', authenticate, machineController.getAllMachines({ sendPhotos: true }));
     router.delete   (URL_BASE + '/single/:machineId', authenticate, machineController.deleteMachine);
     router.get      (URL_BASE + '/permitted/:userId', authenticate, machineController.getPermittedMachineIdsRoute);
     router.post     (URL_BASE + '/enable/single/:machineId', authenticate, machineController.enableMachine);
