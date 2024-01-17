@@ -7,6 +7,7 @@ import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
 import { isLocationInGeoFence, Location } from '../util/locationCheck';
+import { Op } from 'sequelize';
 
 interface createMachineBody {
     machine:Partial<Machine>;
@@ -140,7 +141,12 @@ export const getAllMachines = ({ sendPhotos }:{sendPhotos?:boolean}):RequestHand
             }
             return jsonMachine;
         })) as Machine[];
-        const users = await UserDB.findAll({ where: { id: machines.map((machine) => machine.lastUsedBy) } }).then((users) => users.map((user) => user.toJSON())) as User[];
+
+        const users = await UserDB.findAll({
+            where: { id: { [Op.in]:
+             machines.map((machine) => machine.lastUsedBy) } },
+        }).then((users) => users.map((user) => user.toJSON())) as User[];
+
         const userNameMap:{[key:string]:string} = {};
         users.forEach((user) => {
             userNameMap[user.id] = user.name;

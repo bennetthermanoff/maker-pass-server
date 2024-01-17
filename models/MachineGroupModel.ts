@@ -12,7 +12,7 @@ export const machineGroupModel:ModelAttributes = {
         allowNull: false,
     },
     sk: {
-        type: DataTypes.STRING, // (ENTRY || GEOFENCE) ? groupId
+        type: DataTypes.STRING, // (MACHINE || GEOFENCE) ? groupId
         allowNull: true,
     },
     data: {

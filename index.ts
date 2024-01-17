@@ -6,6 +6,7 @@ import { usePingRoutes } from './routes/pingRoutes';
 import { useMachineRoutes } from './routes/machineRoutes';
 import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
 import qrCode from 'qrcode-terminal';
+import { useMachineGroupRoutes } from './routes/machineGroupRoutes';
 export const app = express();
 
 // const corsOptions = {
@@ -23,8 +24,10 @@ useUserRoutes(app);
 usePingRoutes(app);
 useMachineRoutes(app);
 usePermissionGroupRoutes(app);
+useMachineGroupRoutes(app);
 
 app.use(express.urlencoded({ extended: true }));
+// app.use(express.bodyParser({ limit: '50mb' }));
 
 sequelize.sync();
 

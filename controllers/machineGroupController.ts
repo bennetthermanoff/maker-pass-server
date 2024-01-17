@@ -199,17 +199,17 @@ export const getAllMachineGroups:RequestHandler = async (req, res) => {
                 type:'GEOFENCE',
             },
         }).then((machineGroupGeoFences) => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as MachineGroupGeoFence[];
-        const machineGroupsObject = machineGroups.reduce((machineGroupObject, machineGroup) => {
+        const machineGroupMap = machineGroups.reduce((machineGroupObject, machineGroup) => {
             machineGroupObject[machineGroup.id] = { name:machineGroup.data, machineIds:[], geoFences:[] };
             return machineGroupObject;
         }, {} as {[key:string]:{name:string, machineIds:string[], geoFences:GeoFence[]}});
         machineGroupMachines.forEach((machineGroupMachine) => {
-            machineGroupsObject[machineGroupMachine.sk].machineIds.push(machineGroupMachine.data);
+            machineGroupMap[machineGroupMachine.sk].machineIds.push(machineGroupMachine.data);
         });
         machineGroupGeoFences.forEach((machineGroupGeoFence) => {
-            machineGroupsObject[machineGroupGeoFence.sk].geoFences.push(machineGroupGeoFence.data);
+            machineGroupMap[machineGroupGeoFence.sk].geoFences.push(machineGroupGeoFence.data);
         });
-        res.status(200).json(machineGroupsObject);
+        res.status(200).json(machineGroupMap);
     }
     catch (error) {
         res.status(500).json({ error: error });
