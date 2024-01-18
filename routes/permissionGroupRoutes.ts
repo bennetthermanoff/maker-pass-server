@@ -3,7 +3,7 @@
 import { Express } from 'express';
 import * as permissionGroupController from '../controllers/permissionGroupController';
 import { authenticate } from '../controllers/userController';
-const URL_BASE = '/api/permissiongroup';
+const URL_BASE = '/api/permissionGroup';
 export const usePermissionGroupRoutes = (router:Express) => {
     router.get      (URL_BASE + '/all', authenticate, permissionGroupController.getPermissionGroups);
     router.post     (URL_BASE + '/single', authenticate, permissionGroupController.createPermissionGroup);
