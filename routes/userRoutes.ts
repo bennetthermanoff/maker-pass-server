@@ -5,4 +5,5 @@ export const useUserRoutes = (router:Express) => {
     router.post(URL_BASE + '/register', userController.register);
     router.post(URL_BASE + '/login', userController.login);
     router.get(URL_BASE + '/token/:userId', userController.authenticate, userController.issueNewExternalAccessToken);
+    router.get(URL_BASE + '/search/:searchTeam', userController.authenticate, userController.searchForUser);
 };

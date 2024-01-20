@@ -202,3 +202,24 @@ export const issueNewExternalAccessToken:RequestHandler = async (req, res) => {
     }
 };
 
+export const searchForUser:RequestHandler = async (req, res) => {
+    try {
+        const userType = req.headers.usertype as UserType;//either email or name
+        if (userType == 'user'){
+            res.status(400).json({ message: 'User not authorized' });
+            return;
+        }
+        const searchTerm = req.params.searchTerm;
+        if (!searchTerm){
+            res.status(400).json({ message: 'Missing search term' });
+            return;
+        }
+        const users = await UserDB.findAll({ where: { [Op.or]:[{ email:{ [Op.like]:`%${searchTerm}%` } }, { name:{ [Op.like]:`%${searchTerm}%` } }] },
+            attributes:{ exclude:['password','accessToken'] } }).then((users) => users.map((user) => user.toJSON())) as User[];
+        res.status(200).json({ users });
+        return;
+    }
+    catch (e){
+        res.status(500).json({ message: e });
+    }
+};

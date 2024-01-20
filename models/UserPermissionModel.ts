@@ -15,7 +15,7 @@ export const userPermissionModel:ModelAttributes = {
         },
     },
     type: {
-        type: DataTypes.STRING, // 'PERMISSIONGROUP'|'MACHINE'
+        type: DataTypes.STRING, // 'GROUP'|'MACHINE'
         allowNull: false,
     },
     sk: {
@@ -31,12 +31,12 @@ export const userPermissionModel:ModelAttributes = {
 export interface UserPermissionEntry {
     id: string;
     userId: string;
-    type: 'PERMISSIONGROUP'|'MACHINE';
+    type: 'GROUP'|'MACHINE';
     sk: string;
     permission: boolean;
 }
 export interface UserPermissionGroup extends UserPermissionEntry{
-    type: 'PERMISSIONGROUP';
+    type: 'GROUP';
 }
 export interface UserPermissionMachine extends UserPermissionEntry{
     type: 'MACHINE';
