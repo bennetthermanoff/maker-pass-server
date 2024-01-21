@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { MachineGroupDB, UserDB, UserPermissionDB } from '../models';
+import { LogDB, MachineGroupDB, UserDB, UserPermissionDB } from '../models';
 import { UserPermissionEntry } from '../models/UserPermissionModel';
 import { User, UserType } from '../models/UserModel';
 import { Op } from 'sequelize';
@@ -80,6 +80,13 @@ export const updatePermissions:RequestHandler = async (req, res) => {
             sk:machine.id,
             permission:machine.permission,
         })));
+        await LogDB.create({
+            type:'PERMISSION',
+            message:`Permissions updated for user ${user.id} by ${req.headers.userid}`,
+            userId:req.headers.userid,
+            referenceId:[...permissionObject.groups.map((group) => group.id), ...permissionObject.machines.map((machine) => machine.id)].join(','),
+            referenceType:'PERMISSIONS',
+        });
         res.status(200).json({ message: 'Permissions updated!' });
     } catch (e) {
         res.status(500).json({ message: e });

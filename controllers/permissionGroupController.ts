@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { PermissionGroupDB } from '../models';
+import { LogDB, PermissionGroupDB } from '../models';
 import { PermissionGroup, PermissionGroupEntry, PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { UserType } from '../models/UserModel';
 
@@ -62,6 +62,14 @@ export const createPermissionGroup:RequestHandler = async (req, res) => {
                 permissionGroupObject[permissionGroupMachine.sk].machineIds.push(permissionGroupMachine.data);
             });
         }
+        LogDB.create({
+            type:'PERMISSION_GROUP',
+            message:`Permission Group ${permissionGroup.id} created`,
+            referenceId:permissionGroup.id,
+            referenceType:'PERMISSION_GROUP',
+            userId:req.headers.userid,
+        });
+
         res.status(200).json({ permissionGroup:permissionGroupObject, message: 'Permission Group created!' });
     } catch (error) {
         res.status(500).json({ message: error });
@@ -99,6 +107,13 @@ export const updatePermissionGroup:RequestHandler = async (req, res) => {
         permissionGroupMachines.forEach((permissionGroupMachine) => {
             permissionGroupObject[permissionGroupMachine.sk].machineIds.push(permissionGroupMachine.data);
         });
+        LogDB.create({
+            type:'PERMISSION_GROUP',
+            message:`Permission Group ${permissionGroup.id} updated`,
+            referenceId:permissionGroup.id,
+            referenceType:'PERMISSION_GROUP',
+            userId:req.headers.userid,
+        });
         res.status(200).json({ permissionGroup:permissionGroupObject, message: 'Permission Group updated!' });
     } catch (error) {
         res.status(500).json({ message: error });
@@ -115,6 +130,13 @@ export const deletePermissionGroup:RequestHandler = async (req, res) => {
         const permissionGroupId = req.params.permissionGroupId as string;
         await PermissionGroupDB.destroy({ where: { id: permissionGroupId } });
         await PermissionGroupDB.destroy({ where: { type:'MACHINE', sk:permissionGroupId } });
+        LogDB.create({
+            type:'PERMISSION_GROUP',
+            message:`Permission Group ${permissionGroupId} deleted`,
+            referenceId:permissionGroupId,
+            referenceType:'PERMISSION_GROUP',
+            userId:req.headers.userid,
+        });
         res.status(200).json({ message: 'Permission Group deleted!' });
     } catch (error) {
         res.status(500).json({ message: error });

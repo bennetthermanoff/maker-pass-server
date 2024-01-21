@@ -9,18 +9,10 @@ export const tagOutModel:ModelAttributes = {
     machineId: {
         type: DataTypes.STRING,
         allowNull: false,
-        references: {
-            model: 'machines',
-            key: 'id',
-        },
     },
     userId: {
         type: DataTypes.STRING,
         allowNull: false,
-        references: {
-            model: 'users',
-            key: 'id',
-        },
     },
     reason: {
         type: DataTypes.STRING,
@@ -33,10 +25,6 @@ export const tagOutModel:ModelAttributes = {
     removedBy: {
         type: DataTypes.STRING,
         allowNull: true,
-        references: {
-            model: 'users',
-            key: 'id',
-        },
     },
     removedReason: {
         type: DataTypes.STRING,

@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { MachineGroupDB } from '../models';
+import { LogDB, MachineGroupDB } from '../models';
 import { GeoFence } from '../util/locationCheck';
 import { MachineGroup, MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
 import { Op } from 'sequelize';
@@ -51,6 +51,13 @@ export const createMachineGroup:RequestHandler = async (req, res) => {
                 data:JSON.stringify(geoFence),
             })));
         }
+        LogDB.create({
+            type:'Machine Group Created',
+            message:`Machine Group ${createMachineGroupBody.name} was created`,
+            referenceId:machineGroupId,
+            referenceType:'Machine Group',
+            userId:req.headers.userid,
+        });
         res.status(200).json(machineGroup);
     }
     catch (error) {
@@ -120,6 +127,13 @@ export const updateMachineGroup:RequestHandler = async (req, res) => {
                 data:JSON.stringify(geoFence),
             })));
         }
+        LogDB.create({
+            type:'Machine Group Updated',
+            message:`Machine Group ${machineGroupId} was updated`,
+            referenceId:machineGroupId,
+            referenceType:'Machine Group',
+            userId:req.headers.userid,
+        });
         res.status(200).json({ message: 'Machine Group updated!' });
     }
     catch (error) {
@@ -143,6 +157,13 @@ export const deleteMachineGroup:RequestHandler = async (req, res) => {
             where:{
                 sk:machineGroupId,
             },
+        });
+        LogDB.create({
+            type:'Machine Group Deleted',
+            message:`Machine Group ${machineGroupId} was deleted`,
+            referenceId:machineGroupId,
+            referenceType:'Machine Group',
+            userId:req.headers.userid,
         });
         res.status(200).json({ message: 'Machine Group deleted!' });
     }

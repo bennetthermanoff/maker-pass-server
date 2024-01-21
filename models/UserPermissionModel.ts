@@ -9,10 +9,6 @@ export const userPermissionModel:ModelAttributes = {
     userId: {
         type: DataTypes.STRING,
         allowNull: false,
-        references: {
-            model: 'user',
-            key: 'id',
-        },
     },
     type: {
         type: DataTypes.STRING, // 'GROUP'|'MACHINE'

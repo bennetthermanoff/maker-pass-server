@@ -7,6 +7,7 @@ import { useMachineRoutes } from './routes/machineRoutes';
 import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
 import qrCode from 'qrcode-terminal';
 import { useMachineGroupRoutes } from './routes/machineGroupRoutes';
+import { useUserPermissionRoutes } from './routes/userPermissionRoutes';
 export const app = express();
 
 // const corsOptions = {
@@ -24,6 +25,7 @@ useUserRoutes(app);
 usePingRoutes(app);
 useMachineRoutes(app);
 usePermissionGroupRoutes(app);
+useUserPermissionRoutes(app);
 useMachineGroupRoutes(app);
 
 app.use(express.urlencoded({ extended: true }));
