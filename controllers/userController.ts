@@ -1,5 +1,5 @@
 import { makerspaceConfig } from '../MakerspaceConfig';
-import { MachineGroupDB, UserDB, LogDB } from '../models';
+import { MachineGroupDB, UserDB, LogDB, UserPermissionDB } from '../models';
 import { RequestHandler } from 'express';
 import bcrypt from 'bcrypt';
 import { isLocationInAnyGeoFence } from '../util/locationCheck';
@@ -7,6 +7,8 @@ import { MachineGroupGeoFence } from '../models/MachineGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
+import { UserPermissionEntry } from '../models/UserPermissionModel';
+import { PermissionObject } from './userPermissionController';
 
 type RegisterBody = {
     name: string;
@@ -211,12 +213,27 @@ export const searchForUser:RequestHandler = async (req, res) => {
         }
         const searchTerm = req.params.searchTerm;
         if (!searchTerm){
-            res.status(400).json({ message: 'Missing search term' });
+            res.status(401).json({ message: 'Missing search term' });
             return;
         }
-        const users = await UserDB.findAll({ where: { [Op.or]:[{ email:{ [Op.like]:`%${searchTerm}%` } }, { name:{ [Op.like]:`%${searchTerm}%` } }] },
+        const users = await UserDB.findAll({ limit:10, where: { [Op.or]:[{ email:{ [Op.like]:`%${searchTerm}%` } }, { name:{ [Op.like]:`%${searchTerm}%` } }] },
             attributes:{ exclude:['password','accessToken'] } }).then((users) => users.map((user) => user.toJSON())) as User[];
-        res.status(200).json({ users });
+
+        const userPermissions = await UserPermissionDB.findAll({ where: { userId:{ [Op.in]:users.map((user) => user.id) } } }).then((userPermissions) => userPermissions.map((userPermission) => userPermission.toJSON())) as UserPermissionEntry[];
+
+        const permissionObjectMap:{[userId:string]:PermissionObject} = {};
+
+        users.forEach((user) => {
+            permissionObjectMap[user.id] = { groups:[], machines:[] };
+        });
+        userPermissions.forEach((userPermission) => {
+            if (userPermission.type === 'GROUP' && userPermission.permission){
+                permissionObjectMap[userPermission.userId].groups.push({ id:userPermission.sk, permission:true });
+            } else if (userPermission.type === 'MACHINE' && userPermission.permission){
+                permissionObjectMap[userPermission.userId].machines.push({ id:userPermission.sk, permission:true });
+            }
+        });
+        res.status(200).json({ users:users.map((user) => ({ ...user, permissionObject:permissionObjectMap[user.id] })) });
         return;
     }
     catch (e){

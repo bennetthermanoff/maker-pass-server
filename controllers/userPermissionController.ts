@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { LogDB, MachineGroupDB, UserDB, UserPermissionDB } from '../models';
+import { LogDB, MachineDB, MachineGroupDB, UserDB, UserPermissionDB } from '../models';
 import { UserPermissionEntry } from '../models/UserPermissionModel';
 import { User, UserType } from '../models/UserModel';
 import { Op } from 'sequelize';
@@ -9,7 +9,7 @@ export type PermissionObject = {groups:{id:string; permission:boolean;}[], machi
 export const getPermissions:RequestHandler = async (req, res) => {
     try {
         const userType = req.headers.usertype as UserType;
-        if (userType !== 'admin'){
+        if (userType == 'user'){
             res.status(400).json({ message: 'User not authorized' });
             return;
         }
@@ -62,12 +62,16 @@ export const updatePermissions:RequestHandler = async (req, res) => {
             res.status(400).json({ message: 'Invalid group id' });
             return;
         }
-        const areAllMachinesValid = await MachineGroupDB.findAndCountAll({ where: { id: { [Op.in]: permissionObject.machines.map((machine) => machine.id) } } }).then((result) => result.count === permissionObject.machines.length);
+        const areAllMachinesValid = await MachineDB.findAndCountAll({ where: { id: { [Op.in]: permissionObject.machines.map((machine) => machine.id) } } }).then((result) => result.count === permissionObject.machines.length);
         if (!areAllMachinesValid){
             res.status(400).json({ message: 'Invalid machine id' });
             return;
         }
-        await UserPermissionDB.destroy({ where: { userId: requestUserId } });
+        // delete all existing permissions if they exist
+        if (await UserPermissionDB.count({ where: { userId: requestUserId } }) > 0){
+            await UserPermissionDB.destroy({ where: { userId: requestUserId } });
+        }
+
         await UserPermissionDB.bulkCreate(permissionObject.groups.map((group) => ({
             userId: requestUserId,
             type:'GROUP',
