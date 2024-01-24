@@ -19,5 +19,5 @@ export const LogDB = sequelize.define('log', logModel);
 export const MachineGroupDB = sequelize.define('machineGroup', machineGroupModel);
 export const PermissionGroupDB = sequelize.define('permissionGroup', permissionGroupModel);
 export const TagOutDB = sequelize.define('tagOut', tagOutModel);
-export const UserPermissionDB = sequelize.define('userPermission', userPermissionModel);
+export const UserPermissionDB = sequelize.define('userPermissions', userPermissionModel);
 

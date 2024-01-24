@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { LogDB, MachineDB, MachineGroupDB, UserDB, UserPermissionDB } from '../models';
+import { LogDB, MachineDB, MachineGroupDB, PermissionGroupDB, UserDB, UserPermissionDB } from '../models';
 import { UserPermissionEntry } from '../models/UserPermissionModel';
 import { User, UserType } from '../models/UserModel';
 import { Op } from 'sequelize';
@@ -57,7 +57,7 @@ export const updatePermissions:RequestHandler = async (req, res) => {
             return;
         }
 
-        const areAllGroupsValid = await MachineGroupDB.findAndCountAll({ where: { id: { [Op.in]: permissionObject.groups.map((group) => group.id) } } }).then((result) => result.count === permissionObject.groups.length);
+        const areAllGroupsValid = await PermissionGroupDB.findAndCountAll({ where: { id: { [Op.in]: permissionObject.groups.map((group) => group.id) } } }).then((result) => result.count === permissionObject.groups.length);
         if (!areAllGroupsValid){
             res.status(400).json({ message: 'Invalid group id' });
             return;
