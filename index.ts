@@ -8,6 +8,10 @@ import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
 import qrCode from 'qrcode-terminal';
 import { useMachineGroupRoutes } from './routes/machineGroupRoutes';
 import { useUserPermissionRoutes } from './routes/userPermissionRoutes';
+import aedes from 'aedes';
+import { createServer } from 'aedes-server-factory';
+import mqtt from 'mqtt';
+import fs from 'fs';
 export const app = express();
 
 // const corsOptions = {
@@ -32,6 +36,32 @@ app.use(express.urlencoded({ extended: true }));
 // app.use(express.bodyParser({ limit: '50mb' }));
 
 sequelize.sync();
+//tls
+// const server = createServer(aedes, {
+//     ws: true,
+//     https: {
+//         key: fs.readFileSync('key.pem'),
+//         cert: fs.readFileSync('cert.pem'),
+//     },
+// });
+// server.listen(8883, () => {
+//     console.log('server started and listening on port ', 8883);
+// });
+
+// const client = mqtt.connect('mqtts://localhost:8883', {
+//     rejectUnauthorized: false,
+//     username: 'admin',
+//     password: 'admin',
+// });
+
+// client.on('connect', () => {
+//     console.log('Connected to MQTT server');
+//     client.subscribe('test', (err) => {
+//         if (!err) {
+//             client.publish('test', 'Hello mqtt');
+//         }
+//     });
+// });
 
 app.listen(PORT, () => {
     console.log(`Server is running on ${makerspaceConfig.serverAddress} port ${PORT}.`);

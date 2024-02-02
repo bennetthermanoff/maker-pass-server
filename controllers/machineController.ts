@@ -140,7 +140,7 @@ export const getAllMachines = ({ sendPhotos }:{sendPhotos?:boolean}):RequestHand
                 jsonMachine.enableKey = null;
             }
             return jsonMachine;
-        })) as Machine[];
+        })) as Array<Machine&{lastUsedByName?:string|null}>;
 
         const users = await UserDB.findAll({
             where: { id: { [Op.in]:
@@ -153,7 +153,7 @@ export const getAllMachines = ({ sendPhotos }:{sendPhotos?:boolean}):RequestHand
         });
 
         machines.forEach((machine) => {
-            machine.lastUsedBy = machine.lastUsedBy ? userNameMap[machine.lastUsedBy] : null;
+            machine.lastUsedByName = machine.lastUsedBy ? userNameMap[machine.lastUsedBy] : null;
         });
 
         res.status(200).json({ machines });
