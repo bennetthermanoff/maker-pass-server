@@ -1,5 +1,6 @@
 import { DataTypes, ModelAttributes } from 'sequelize';
 import { GeoFence } from '../util/locationCheck';
+// import { GeoFence } from '../util/locationCheck';
 
 export const machineGroupModel:ModelAttributes = {
     id: {
@@ -41,6 +42,9 @@ export interface MachineGroupMachine extends MachineGroupEntry{
 export interface MachineGroupGeoFence extends MachineGroupEntry{
     type:'GEOFENCE',
     sk:string, //groupId
-    data:GeoFence //geoFenceCoordinate
+    data:string|GeoFence //geoFenceCoordinate
+}
+export interface MachineGroupGeoFenceJSON extends MachineGroupGeoFence{
+    data:GeoFence
 }
 

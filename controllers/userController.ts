@@ -2,8 +2,8 @@ import { makerspaceConfig } from '../MakerspaceConfig';
 import { MachineGroupDB, UserDB, LogDB, UserPermissionDB } from '../models';
 import { RequestHandler } from 'express';
 import bcrypt from 'bcrypt';
-import { isLocationInAnyGeoFence } from '../util/locationCheck';
-import { MachineGroupGeoFence } from '../models/MachineGroupModel';
+import { GeoFence, isLocationInAnyGeoFence } from '../util/locationCheck';
+import { MachineGroupGeoFence, MachineGroupGeoFenceJSON } from '../models/MachineGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
@@ -39,12 +39,26 @@ export const register:RequestHandler = async (req, res) => {
             return;
         }
         registerBody.email = registerBody.email.toLowerCase();
-
         if (registerBody.registrationType === 'admin'){
+
             if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.adminPassword) {
                 res.status(400).json({ message: 'Invalid registration key' });
+
                 return;
             }
+
+            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
+                const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+                return {
+                    ...geoFenceObj,
+                    data:JSON.parse(geoFenceObj.data as string) as GeoFence,
+                };
+            }) as MachineGroupGeoFenceJSON[]);
+            if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
+                res.status(400).json({ message: 'Invalid location' });
+                return;
+            }
+
             UserDB.create({
                 name: registerBody.name,
                 email: registerBody.email,
@@ -62,7 +76,7 @@ export const register:RequestHandler = async (req, res) => {
             return;
         }
         else if (registerBody.registrationType === 'user'){
-            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => geoFence.toJSON() as MachineGroupGeoFence));
+            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => JSON.parse(geoFence.toJSON() as string) as MachineGroupGeoFenceJSON));
             if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
                 res.status(400).json({ message: 'Invalid location' });
                 return;

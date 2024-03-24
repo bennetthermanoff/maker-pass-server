@@ -189,13 +189,13 @@ export const getMachineGroup:RequestHandler = async (req, res) => {
                 type:'MACHINE',
                 sk:machineGroupId,
             },
-        }).then((machineGroupMachines) => machineGroupMachines.map((machineGroupMachine) => machineGroupMachine.toJSON())) as MachineGroupMachine[];
+        }).then((machineGroupMachines): MachineGroupMachine[] => machineGroupMachines.map((machineGroupMachine) => machineGroupMachine.toJSON())) as MachineGroupMachine[];
         const machineGroupGeoFences = await MachineGroupDB.findAll({
             where:{
                 type:'GEOFENCE',
                 sk:machineGroupId,
             },
-        }).then((machineGroupGeoFences) => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as MachineGroupGeoFence[];
+        }).then((machineGroupGeoFences): MachineGroupGeoFence[] => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as MachineGroupGeoFence[];
         res.status(200).json({ machineGroup:machineGroup, machineGroupMachines:machineGroupMachines, machineGroupGeoFences:machineGroupGeoFences });
     }
     catch (error) {
@@ -228,9 +228,10 @@ export const getAllMachineGroups:RequestHandler = async (req, res) => {
             machineGroupMap[machineGroupMachine.sk].machineIds.push(machineGroupMachine.data);
         });
         machineGroupGeoFences.forEach((machineGroupGeoFence) => {
-            machineGroupMap[machineGroupGeoFence.sk].geoFences.push(machineGroupGeoFence.data);
+            machineGroupMap[machineGroupGeoFence.sk].geoFences.push(JSON.parse(machineGroupGeoFence.data as string));
         });
         res.status(200).json(machineGroupMap);
+
     }
     catch (error) {
         res.status(500).json({ error: error });

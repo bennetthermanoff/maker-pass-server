@@ -263,7 +263,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
         const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
         if (machineGroupMachine){
             const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
-            if (geoFence && !isLocationInGeoFence(body.location, geoFence.data)){
+            if (geoFence && !isLocationInGeoFence(body.location, JSON.parse(geoFence.data as string))){
                 res.status(400).json({ message: 'Invalid location' });
                 return;
             }
@@ -272,6 +272,11 @@ export const enableMachine:RequestHandler = async (req,res) => {
         const permittedMachineIds = await getPermittedMachineIds(userId);
         if (!permittedMachineIds.includes(machineId)){
             res.status(400).json({ message: 'User not permitted to enable machine' });
+            return;
+        }
+
+        if (machine.latestTagOutId){
+            res.status(400).json({ message: 'Machine is tagged out' });
             return;
         }
         // TODO: MQTT ENABLE HERE
@@ -315,7 +320,7 @@ export const disableMachine:RequestHandler = async (req,res) => {
         const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
         if (machineGroupMachine){
             const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
-            if (geoFence && !isLocationInGeoFence(body.location, geoFence.data) && userType == 'user'){
+            if (geoFence && !isLocationInGeoFence(body.location, JSON.parse(geoFence.data as string)) && userType == 'user'){
                 res.status(400).json({ message: 'Invalid location' });
                 return;
             }
