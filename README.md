@@ -1,10 +1,18 @@
-# Maker Pass Server
+![image](https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/e7d9f9e2-a849-4a98-a71b-748616ca6def)
 
 ### MakerPass is an upcoming iOS/Android app for managing access to machines in makerspaces. It is a successor of the Tulane Makerspace Card Reader System built for _any_ makerspace.
 
 This repository contains the server-side code for the MakerPass system. MakerPass is built to be self-hosted, with the app connecting to makerspace servers directly.
 
-MakerPass additionally hosts a MQTT server for communication with wifi relays. At the Tulane makerspace, we are using sonoff wifi relays running Tasmota firmware.
+<img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/2a79122d-cfee-4ce3-8926-d70b1ebfc716" width="200">
+<img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/05885f6a-c096-4081-887a-a732a42fce99" width="200">
+
+
+MakerPass additionally hosts a MQTT server for communication with wifi relays. **The primary purpose of MakerPass is to only allow certain user's access to certain tools.** At the Tulane Makerspace, users must be trained on each tool, and with MakerPass, they are able to turn on the power to their authorized machines.
+
+MakerPass also allows for keeping track of maintenance through TagOuts.
+
+## Notice: this repository is under active development. It's not done yet! 
 
 ### Installation
 
@@ -15,6 +23,10 @@ MakerPass additionally hosts a MQTT server for communication with wifi relays. A
 ### Configuration
 
 MakerspaceConfig.ts contains the configuration for the makerspace. This includes the name of the makerspace, your ip address, and the port for the server. Additonally, it contains questions for the registration form. Take a look at the included example.
+
+### First Time Setup
+
+When you start the MakerPass, the admin QR code will be displayed, this allows you to register for your makerspace directly as an admin. **Do not share this QR Code. In the MakerPass app, there is a User registration QR code that should be posted at your makerspace.**
 
 ### API
 
