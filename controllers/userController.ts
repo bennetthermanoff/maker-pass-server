@@ -164,6 +164,37 @@ export const authenticate:RequestHandler = async (req, res, next) => {
     }
 };
 
+export const changeUserType:RequestHandler = async (req, res) => {
+    try {
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
+        if (userType !== 'admin'){
+            res.status(400).json({ message: 'User not authorized' });
+            return;
+        }
+
+        const targetUserId = req.params.userId;
+        const targetUserType = req.params.userType as UserType;
+        if (!targetUserId || !targetUserType){
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        if (targetUserType !== 'admin'
+            && targetUserType !== 'user'
+            && targetUserType !== 'technician'){
+            res.status(400).json({ message: 'Invalid user type' });
+            return;
+        }
+        await UserDB.update({ userType: targetUserType }, { where: { id: targetUserId } });
+        await LogDB.create({ type:'User Type Changed', message:`User type changed to ${targetUserType} for user ${targetUserId}`, userId:userId, referenceId:targetUserId, referenceType:'user' });
+        res.status(200).json({ message: 'User type updated' });
+        return;
+    }
+    catch (e){
+        res.status(500).json({ message: e });
+    }
+};
+
 export const issueNewExternalAccessToken:RequestHandler = async (req, res) => {
     try {
         const userId = req.headers.userid as string;

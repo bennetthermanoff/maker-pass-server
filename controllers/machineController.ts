@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { LogDB, MachineDB, MachineGroupDB, PermissionGroupDB, UserDB, UserPermissionDB } from '../models';
+import { LogDB, MachineDB, MachineGroupDB, PermissionGroupDB, TagOutDB, UserDB, UserPermissionDB } from '../models';
 import { v4 as UUIDV4 } from 'uuid';
 import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
@@ -8,6 +8,7 @@ import { User, UserType } from '../models/UserModel';
 import { MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
 import { isLocationInGeoFence, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
+import { TagOut } from '../models/TagOutModel';
 
 interface createMachineBody {
     machine:Partial<Machine>;
@@ -146,17 +147,21 @@ export const getAllMachines = ({ sendPhotos }:{sendPhotos?:boolean}):RequestHand
             where: { id: { [Op.in]:
              machines.map((machine) => machine.lastUsedBy) } },
         }).then((users) => users.map((user) => user.toJSON())) as User[];
-
-        const userNameMap:{[key:string]:string} = {};
+        const tagOutMap:Record<string,TagOut> = {};
+        const userNameMap:Record<string,string> = {};
         users.forEach((user) => {
             userNameMap[user.id] = user.name;
         });
 
-        machines.forEach((machine) => {
+        await Promise.all(machines.map(async (machine) => {
             machine.lastUsedByName = machine.lastUsedBy ? userNameMap[machine.lastUsedBy] : null;
-        });
+            if (machine.latestTagOutId){
+                const tagOut = await TagOutDB.findByPk(machine.latestTagOutId).then((tagOut) => tagOut?.toJSON()) as TagOut;
+                tagOutMap[machine.id] = tagOut;
+            }
+        }));
 
-        res.status(200).json({ machines });
+        res.status(200).json({ machines , tagOutMap });
     } catch (e) {
         res.status(500).json({ message: e });
     }
@@ -181,6 +186,9 @@ export const deleteMachine:RequestHandler = async (req,res) => {
             return;
         }
         await MachineDB.destroy({ where: { id: machineId } });
+        await MachineGroupDB.destroy({ where: { data: machineId, type: 'MACHINE' } });
+        await TagOutDB.destroy({ where: { machineId } });
+        await PermissionGroupDB.destroy({ where: { data: machineId, type: 'MACHINE' } });
         await LogDB.create({
             userId: userId,
             type: 'DELETE_MACHINE',

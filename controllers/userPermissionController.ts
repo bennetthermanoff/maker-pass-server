@@ -1,5 +1,5 @@
 import { RequestHandler } from 'express';
-import { LogDB, MachineDB, MachineGroupDB, PermissionGroupDB, UserDB, UserPermissionDB } from '../models';
+import { LogDB, MachineDB, PermissionGroupDB, UserDB, UserPermissionDB } from '../models';
 import { UserPermissionEntry } from '../models/UserPermissionModel';
 import { User, UserType } from '../models/UserModel';
 import { Op } from 'sequelize';

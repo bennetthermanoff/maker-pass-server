@@ -10,10 +10,16 @@ export const makerspaceConfig:MakerspaceConfig = {
     website: 'https://makerspace.tulane.edu',
 
     // The server address of this server
-    serverAddress: 'http://192.168.0.113',
+    serverAddress: 'http://192.168.0.140',
 
     // The port of this server
     serverPort: 8080,
+
+    mqttPort: 8883,
+
+    mqttUsername: 'admin',
+
+    mqttPassword: 'admin',
 
     // Password for creating an admin account
     adminPassword: 'admin',
@@ -138,6 +144,9 @@ type MakerspaceConfig = {
     website?: string,
     serverAddress: string,
     serverPort: number,
+    mqttPort: number,
+    mqttUsername: string,
+    mqttPassword: string,
     adminPassword: string,
     registrationPassword: string,
     theme: {
