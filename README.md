@@ -7,12 +7,11 @@ This repository contains the server-side code for the MakerPass system. MakerPas
 <img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/2a79122d-cfee-4ce3-8926-d70b1ebfc716" width="200">
 <img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/05885f6a-c096-4081-887a-a732a42fce99" width="200">
 
-
 MakerPass additionally hosts a MQTT server for communication with wifi relays. **The primary purpose of MakerPass is to only allow certain user's access to certain tools.** At the Tulane Makerspace, users must be trained on each tool, and with MakerPass, they are able to turn on the power to their authorized machines.
 
 MakerPass also allows for keeping track of maintenance through TagOuts.
 
-## Notice: this repository is under active development. It's not done yet! 
+## Notice: this repository is under active development. It's not done yet!
 
 ### Installation
 
@@ -20,13 +19,11 @@ MakerPass also allows for keeping track of maintenance through TagOuts.
 2. Run `npm install` to install dependencies
 3. Run `npm start` to start the server
 
-### Configuration
+### Configuration And First Time Setup
 
-MakerspaceConfig.ts contains the configuration for the makerspace. This includes the name of the makerspace, your ip address, and the port for the server. Additonally, it contains questions for the registration form. Take a look at the included example.
+When the server is first started, you will be prompted to configure the server. This will be saved to `MakerspaceConfig.json` in the root directory of the repository. You can reconfigure the server at any time by deleting this file or directly editing it and restarting the server. See MakerspaceConfig.ts for type information.
 
-### First Time Setup
-
-When you start the MakerPass, the admin QR code will be displayed, this allows you to register for your makerspace directly as an admin. **Do not share this QR Code. In the MakerPass app, there is a User registration QR code that should be posted at your makerspace.**
+After configuration, the admin QR code will be displayed, this allows you to register for your makerspace directly as an admin. **Do not share this QR Code. Subsequent admins can be added through the admin panel.** After restarting the server, a normal **User** QR code will be displayed. This is the QR code that users will scan to register for the makerspace.
 
 ### API
 

@@ -1,4 +1,3 @@
-import { makerspaceConfig } from '../MakerspaceConfig';
 import { MachineGroupDB, UserDB, LogDB, UserPermissionDB } from '../models';
 import { RequestHandler } from 'express';
 import bcrypt from 'bcrypt';
@@ -9,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { UserPermissionEntry } from '../models/UserPermissionModel';
 import { PermissionObject } from './userPermissionController';
+import { MakerspaceConfig } from '../MakerspaceConfig';
 
 type RegisterBody = {
     name: string;
@@ -23,7 +23,7 @@ type RegisterBody = {
     additionalInfo?: object;
 };
 
-export const register:RequestHandler = async (req, res) => {
+export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (makerspaceConfig) => async (req, res) => {
     try {
         const registerBody:RegisterBody = req.body;
         if (!registerBody.name || !registerBody.email || !registerBody.password || !registerBody.registrationType) {
@@ -41,7 +41,7 @@ export const register:RequestHandler = async (req, res) => {
         registerBody.email = registerBody.email.toLowerCase();
         if (registerBody.registrationType === 'admin'){
 
-            if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.adminPassword) {
+            if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword) === false) {
                 res.status(400).json({ message: 'Invalid registration key' });
 
                 return;

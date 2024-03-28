@@ -1,9 +1,10 @@
 import { RequestHandler } from 'express';
-import { makerspaceConfig } from '../MakerspaceConfig';
 import { MachineGroupDB } from '../models';
 import { MachineGroupGeoFence } from '../models/MachineGroupModel';
+import { MakerspaceConfig } from '../MakerspaceConfig';
+import { compareSync } from 'bcrypt';
 
-export const pingServer:RequestHandler = async (req,res) => {
+export const pingServer:(makerspaceConfig:MakerspaceConfig)=>RequestHandler = (makerspaceConfig) => async (req,res) => {
     const { registrationType, registrationKey } = req.body;
     if (!registrationType || !registrationKey){
         res.status(400).json({ message:'Invalid registration type or key' });
@@ -13,7 +14,7 @@ export const pingServer:RequestHandler = async (req,res) => {
         res.status(400).json({ message:'Invalid registration type' });
         return;
     }
-    if (registrationType === 'admin' && registrationKey !== makerspaceConfig.adminPassword){
+    if (registrationType === 'admin' && !compareSync(registrationKey, makerspaceConfig.adminPassword)){
         res.status(400).json({ message:'Invalid registration key' });
         return;
     }
@@ -30,7 +31,7 @@ export const pingServer:RequestHandler = async (req,res) => {
             name:makerspaceConfig.name,
             website:makerspaceConfig.website,
             serverAddress:makerspaceConfig.serverAddress,
-            serverPort:makerspaceConfig.serverPort,
+            serverPort:makerspaceConfig.externalServerPort,
             theme:makerspaceConfig.theme,
             additionalInfoFields:makerspaceConfig.additionalInfoFields,
             hasGeoFences:hasGeoFences,

@@ -14,6 +14,9 @@
 # db
 db.sqlite
 
+# Makerspace config
+MakerspaceConfig.json
+
 # misc
 db.config.ts
 .DS_Store
