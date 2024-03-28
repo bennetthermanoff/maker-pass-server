@@ -19,7 +19,7 @@ MakerPass also allows for keeping track of maintenance through TagOuts.
 2. Run `npm install` to install dependencies
 3. Run `npm start` to start the server
 
-### Configuration And First Time Setup
+### Configuration and First Time Setup
 
 When the server is first started, you will be prompted to configure the server. This will be saved to `MakerspaceConfig.json` in the root directory of the repository. You can reconfigure the server at any time by deleting this file or directly editing it and restarting the server. See MakerspaceConfig.ts for type information.
 
