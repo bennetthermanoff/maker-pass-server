@@ -39,6 +39,11 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             return;
         }
         registerBody.email = registerBody.email.toLowerCase();
+        const existingUser = await UserDB.findOne({ where: { email:registerBody.email } }).then((user) => user?.toJSON()) as User;
+        if (existingUser){
+            res.status(400).json({ message: 'Email already in use' });
+            return;
+        }
         if (registerBody.registrationType === 'admin'){
 
             if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword) === false) {
