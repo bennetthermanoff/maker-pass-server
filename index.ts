@@ -91,6 +91,7 @@ if (!makerspaceConfig){
 
     app.listen(BACKEND_PORT, () => {
         console.log(`Server is running on ${makerspaceConfig?.serverAddress} port ${BACKEND_PORT}.`);
+        console.log(`Node PID: ${process.pid}`);
 
     });
     console.log('User registration QR code: ');
