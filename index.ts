@@ -7,10 +7,10 @@ import { usePermissionGroupRoutes } from './routes/permissionGroupRoutes';
 import qrCode from 'qrcode-terminal';
 import { useMachineGroupRoutes } from './routes/machineGroupRoutes';
 import { useUserPermissionRoutes } from './routes/userPermissionRoutes';
-// import aedes from 'aedes';
-// import mqtt from 'mqtt';
-// import tls from 'tls';
-// import fs from 'fs';
+import aedes from 'aedes';
+import mqtt from 'mqtt';
+import tls from 'tls';
+import fs from 'fs';
 import { useTagOutRoutes } from './routes/tagOutRoutes';
 import { printWelcome, setup } from './setup';
 import { readFileSync } from 'fs';
@@ -50,44 +50,44 @@ if (!makerspaceConfig){
 
     sequelize.sync();
     //tls
-    // const aedesHandle = new aedes();
-    // const MQTToptions = {
-    //     key: fs.readFileSync('certs/server.key'),
-    //     cert: fs.readFileSync('certs/server.crt'),
-    // };
-    // aedesHandle.authenticate = (client, username, password, callback) => {
-    //     console.log('Authenticating client: ', client.id);
+    const aedesHandle = new aedes();
+    const MQTToptions: tls.TlsOptions = {
+        key: fs.readFileSync('certs/server.key'),
+        cert: fs.readFileSync('certs/server.crt'),
+    };
+    aedesHandle.authenticate = (client, username, password, callback) => {
+        console.log('Authenticating client: ', client.id);
 
-    //     if (username === makerspaceConfig.mqttUsername && password?.toString() === makerspaceConfig.mqttPassword) {
-    //         callback(null, true);
-    //     } else {
-    //         callback(null, false);
-    //     }
-    // };
+        if (makerspaceConfig && username === makerspaceConfig.mqttUsername && password?.toString() === makerspaceConfig.mqttPassword) {
+            callback(null, true);
+        } else {
+            callback(null, false);
+        }
+    };
 
-    // const MQTTserver = tls.createServer(MQTToptions, aedesHandle.handle);
+    const MQTTserver = tls.createServer(MQTToptions, aedesHandle.handle);
 
-    // MQTTserver.listen(MQTT_PORT, () => {
-    //     console.log('MQTT server started and listening on port ', MQTT_PORT);
-    // });
+    MQTTserver.listen(MQTT_PORT, () => {
+        console.log('MQTT server started and listening on port ', MQTT_PORT);
+    });
 
-    // const client = mqtt.connect('mqtts://localhost:8883', {
-    //     rejectUnauthorized: false,
-    //     clientId:'makerspaceBackend',
-    //     username: makerspaceConfig.mqttUsername,
-    //     password: makerspaceConfig.mqttPassword,
-    // });
+    const client = mqtt.connect(`mqtts://localhost:${MQTT_PORT}`, {
+        rejectUnauthorized: false,
+        clientId:'makerspaceBackend',
+        username: makerspaceConfig.mqttUsername,
+        password: makerspaceConfig.mqttPassword,
+    });
 
-    // client.on('connect', () => {
-    //     console.log('Connected to MQTT server');
-    //     client.subscribe('test', (err) => {
-    //         if (!err) {
-    //             client.publish('test', 'Hello mqtt');
-    //         } else {
-    //             console.log(err);
-    //         }
-    //     });
-    // });
+    client.on('connect', () => {
+        console.log('Connected to MQTT server');
+        client.subscribe('test', (err) => {
+            if (!err) {
+                client.publish('test', 'Hello mqtt');
+            } else {
+                console.log(err);
+            }
+        });
+    });
 
     app.listen(BACKEND_PORT, () => {
         console.log(`Server is running on ${makerspaceConfig?.serverAddress} port ${BACKEND_PORT}.`);
