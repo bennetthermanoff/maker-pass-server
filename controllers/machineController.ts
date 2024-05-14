@@ -281,7 +281,7 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             return;
         }
 
-        if (MqttClient?.connected && machine.mqttTopic){
+        if (MqttClient !== undefined && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'ON');
         }
         await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
@@ -329,7 +329,7 @@ export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler 
                 return;
             }
         }
-        if (MqttClient?.connected && machine.mqttTopic){
+        if (MqttClient !== undefined && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'OFF');
         }
         await MachineDB.update({ enabled: false }, { where: { id: machineId } });
