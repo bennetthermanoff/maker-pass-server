@@ -34,7 +34,8 @@ if (!makerspaceConfig){
     const BACKEND_PORT = makerspaceConfig.internalServerPort;
     const MQTT_PORT = makerspaceConfig.mqttPort;
     let MQTTClient: mqtt.MqttClient | undefined = undefined;
-    try {
+
+    if (fs.existsSync('certs/server.crt') && fs.existsSync('certs/server.key')){
         const aedesHandle = new aedes();
 
         const MQTToptions: tls.TlsOptions = {
@@ -47,7 +48,7 @@ if (!makerspaceConfig){
             console.log('MQTT server started and listening on port ', MQTT_PORT);
         });
 
-        const client = mqtt.connect(`mqtts://localhost:${MQTT_PORT}`, {
+        MQTTClient = mqtt.connect(`mqtts://localhost:${MQTT_PORT}`, {
             rejectUnauthorized: false,
             clientId:'makerPassServer',
             username: makerspaceConfig.mqttUsername,
@@ -56,9 +57,8 @@ if (!makerspaceConfig){
             console.log('MQTT error:', error);
         });
 
-        client.on('connect', () => {
+        MQTTClient.on('connect', () => {
             console.log('Connected to MQTT server');
-            MQTTClient = client;
         });
         aedesHandle.authenticate = (client, username, password, callback) => {
             console.log('Authenticating client: ', client.id);
@@ -69,9 +69,8 @@ if (!makerspaceConfig){
                 callback(null, false);
             }
         };
-    }
-    catch (e){
-        console.log('No certs found. please create a server.key and server.crt file in the maker-pass-server/certs folder');
+    } else {
+        console.log('No certs found. Add certs at certs/server.crt and certs/server.key');
     }
 
     app.get('/', (req, res) => {
