@@ -47,7 +47,7 @@ if (!makerspaceConfig){
             console.log('MQTT server started and listening on port ', MQTT_PORT);
         });
 
-        const client = mqtt.connect(`localhost:${MQTT_PORT}`, {
+        const client = mqtt.connect(`mqtts://localhost:${MQTT_PORT}`, {
             rejectUnauthorized: false,
             clientId:'makerPassServer',
             username: makerspaceConfig.mqttUsername,
