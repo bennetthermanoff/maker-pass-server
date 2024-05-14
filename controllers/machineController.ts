@@ -9,6 +9,7 @@ import { MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGrou
 import { isLocationInGeoFence, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
+import { MqttClient } from 'mqtt/*';
 
 interface createMachineBody {
     machine:Partial<Machine>;
@@ -235,7 +236,7 @@ interface EnableMachineBody {
     enableKey?:string;
     location?:Location;
 }
-export const enableMachine:RequestHandler = async (req,res) => {
+export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler = (MqttClient) => async (req,res) => {
     try {
         const userId = req.headers.userid as string;
         const userType = req.headers.usertype as UserType;
@@ -279,7 +280,9 @@ export const enableMachine:RequestHandler = async (req,res) => {
             res.status(400).json({ message: 'Machine is tagged out' });
             return;
         }
-        // TODO: MQTT ENABLE HERE
+        if (MqttClient){
+            MqttClient.publish(`cmnd/${machine.mqttTopic}/POWER`, 'ON');
+        }
         await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
         await LogDB.create({
             type: 'ENABLE_MACHINE',
@@ -296,7 +299,7 @@ export const enableMachine:RequestHandler = async (req,res) => {
 };
 
 interface DisableMachineBody extends EnableMachineBody {}
-export const disableMachine:RequestHandler = async (req,res) => {
+export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler = (MqttClient) => async (req,res) => {
     try {
         const userId = req.headers.userid as string;
         const userType = req.headers.usertype as UserType;
@@ -325,7 +328,9 @@ export const disableMachine:RequestHandler = async (req,res) => {
                 return;
             }
         }
-        //TODO: MQTT DISABLE HERE
+        if (MqttClient){
+            MqttClient.publish(`cmnd/${machine.mqttTopic}/POWER`, 'OFF');
+        }
         await MachineDB.update({ enabled: false }, { where: { id: machineId } });
         await LogDB.create({
             type: 'DISABLE_MACHINE',
@@ -342,54 +347,54 @@ export const disableMachine:RequestHandler = async (req,res) => {
     }
 };
 
-export const disableAllMachines:RequestHandler = async (req,res) => {
-    try {
-        const userId = req.headers.userid as string;
-        const userType = req.headers.usertype as UserType;
-        if (userType === 'user'){
-            res.status(400).json({ message: 'Invalid user type' });
-            return;
-        }
-        await MachineDB.update({ enabled: false }, { where: {} });
-        //TODO: MQTT DISABLE HERE
-        await LogDB.create({
-            type: 'DISABLE_ALL_MACHINES',
-            message: 'All machines disabled',
-            userId: userId,
-        });
+// export const disableAllMachines:(MQTTClient: MqttClient|undefined) =>RequestHandler = async (req,res) => {
+//     try {
+//         const userId = req.headers.userid as string;
+//         const userType = req.headers.usertype as UserType;
+//         if (userType === 'user'){
+//             res.status(400).json({ message: 'Invalid user type' });
+//             return;
+//         }
+//         await MachineDB.update({ enabled: false }, { where: {} });
 
-        res.status(200).json({ message: 'All machines disabled' });
-    } catch (e) {
-        res.status(500).json({ message: e });
-    }
-};
+//         await LogDB.create({
+//             type: 'DISABLE_ALL_MACHINES',
+//             message: 'All machines disabled',
+//             userId: userId,
+//         });
 
-export const disableAllMachinesByGroupId:RequestHandler = async (req,res) => {
-    try {
-        const machineGroupId = req.params.groupId;
-        const userId = req.headers.userid as string;
-        const userType = req.headers.usertype as UserType;
-        if (!machineGroupId) {
-            res.status(400).json({ message: 'Missing required fields' });
-            return;
-        }
-        if (userType === 'user'){
-            res.status(400).json({ message: 'Invalid user type' });
-            return;
-        }
-        const machineGroupMachineIds = await MachineGroupDB.findAll({ where: { sk: machineGroupId, type: 'MACHINE' } }).then((machineGroups) => machineGroups.map((machineGroup) => (machineGroup.toJSON() as MachineGroupMachine).data));
-        await MachineDB.update({ enabled: false }, { where: { id: machineGroupMachineIds } });
-        //TODO: MQTT DISABLE HERE
-        await LogDB.create({
-            type: 'DISABLE_ALL_MACHINES',
-            message: `All machines in group ${machineGroupId} disabled`,
-            referenceId: machineGroupId,
-            referenceType: 'MACHINEGROUP',
-            userId: userId,
-        });
+//         res.status(200).json({ message: 'All machines disabled' });
+//     } catch (e) {
+//         res.status(500).json({ message: e });
+//     }
+// };
 
-        res.status(200).json({ message: 'All machines disabled' });
-    } catch (e) {
-        res.status(500).json({ message: e });
-    }
-};
+// export const disableAllMachinesByGroupId:RequestHandler = async (req,res) => {
+//     try {
+//         const machineGroupId = req.params.groupId;
+//         const userId = req.headers.userid as string;
+//         const userType = req.headers.usertype as UserType;
+//         if (!machineGroupId) {
+//             res.status(400).json({ message: 'Missing required fields' });
+//             return;
+//         }
+//         if (userType === 'user'){
+//             res.status(400).json({ message: 'Invalid user type' });
+//             return;
+//         }
+//         const machineGroupMachineIds = await MachineGroupDB.findAll({ where: { sk: machineGroupId, type: 'MACHINE' } }).then((machineGroups) => machineGroups.map((machineGroup) => (machineGroup.toJSON() as MachineGroupMachine).data));
+//         await MachineDB.update({ enabled: false }, { where: { id: machineGroupMachineIds } });
+//         //TODO: MQTT DISABLE HERE
+//         await LogDB.create({
+//             type: 'DISABLE_ALL_MACHINES',
+//             message: `All machines in group ${machineGroupId} disabled`,
+//             referenceId: machineGroupId,
+//             referenceType: 'MACHINEGROUP',
+//             userId: userId,
+//         });
+
+//         res.status(200).json({ message: 'All machines disabled' });
+//     } catch (e) {
+//         res.status(500).json({ message: e });
+//     }
+// };
