@@ -280,6 +280,8 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             res.status(400).json({ message: 'Machine is tagged out' });
             return;
         }
+        console.log(MqttClient, machine.mqttTopic);
+
         if (MqttClient && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'ON');
         }
