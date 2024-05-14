@@ -281,6 +281,8 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             return;
         }
         if (MqttClient){
+            console.log(`cmnd/${machine.mqttTopic}/Power`, 'ON');
+
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'ON');
         }
         await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
