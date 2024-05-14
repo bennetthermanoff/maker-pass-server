@@ -59,6 +59,7 @@ if (!makerspaceConfig){
 
         MQTTClient.on('connect', () => {
             console.log('Connected to MQTT server');
+            useMachineRoutes(app, MQTTClient);
         });
         aedesHandle.authenticate = (client, username, password, callback) => {
             console.log('Authenticating client: ', client.id);
@@ -71,6 +72,7 @@ if (!makerspaceConfig){
         };
     } else {
         console.log('No certs found. Add certs at certs/server.crt and certs/server.key');
+        useMachineRoutes(app, MQTTClient);
     }
 
     app.get('/', (req, res) => {
@@ -81,7 +83,6 @@ if (!makerspaceConfig){
 
     useUserRoutes(app,makerspaceConfig);
     usePingRoutes(app,makerspaceConfig);
-    useMachineRoutes(app, MQTTClient);
     usePermissionGroupRoutes(app);
     useUserPermissionRoutes(app);
     useMachineGroupRoutes(app);
