@@ -44,26 +44,23 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             res.status(400).json({ message: 'Email already in use' });
             return;
         }
+        const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
+            const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFenceJSON;
+            return {
+                ...geoFenceObj,
+                data:geoFenceObj.data,
+            };
+        }) as MachineGroupGeoFenceJSON[]);
+        if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
+            res.status(400).json({ message: 'Invalid location' });
+            return;
+        }
         if (registerBody.registrationType === 'admin'){
-
             if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword) === false) {
                 res.status(400).json({ message: 'Invalid registration key' });
 
                 return;
             }
-
-            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
-                const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFenceJSON;
-                return {
-                    ...geoFenceObj,
-                    data:geoFenceObj.data,
-                };
-            }) as MachineGroupGeoFenceJSON[]);
-            if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
-                res.status(400).json({ message: 'Invalid location' });
-                return;
-            }
-
             UserDB.create({
                 name: registerBody.name,
                 email: registerBody.email,
@@ -81,12 +78,6 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             return;
         }
         else if (registerBody.registrationType === 'user'){
-            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => JSON.parse(geoFence.toJSON() as string) as MachineGroupGeoFenceJSON));
-            if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
-                res.status(400).json({ message: 'Invalid location' });
-                return;
-            }
-
             if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.registrationPassword && registerBody.registrationKey !== makerspaceConfig.adminPassword) {
                 res.status(400).json({ message: 'Invalid registration key' });
                 return;
