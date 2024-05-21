@@ -53,10 +53,10 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             }
 
             const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
-                const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+                const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFenceJSON;
                 return {
                     ...geoFenceObj,
-                    data:JSON.parse(geoFenceObj.data as string) as GeoFence,
+                    data:geoFenceObj.data,
                 };
             }) as MachineGroupGeoFenceJSON[]);
             if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
