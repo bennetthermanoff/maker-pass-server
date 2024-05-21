@@ -28,7 +28,7 @@ export const isLocationInGeoFence = (location:Location|undefined, geoFenceCoordi
         return false;
     }
     const distance = getDistanceBetweenPoints(location, geoFenceCoordinate);
-    return distance <= geoFenceCoordinate.radius;
+    return distance <= geoFenceCoordinate.radius * 1000;
 };
 // https://www.movable-type.co.uk/scripts/latlong.html
 const getDistanceBetweenPoints = (location1:Location, location2:Location) => {

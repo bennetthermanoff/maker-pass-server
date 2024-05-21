@@ -5,8 +5,8 @@ import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
-import { MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
-import { isLocationInGeoFence, Location } from '../util/locationCheck';
+import { MachineGroupGeoFence, MachineGroupGeoFenceJSON, MachineGroupMachine } from '../models/MachineGroupModel';
+import { GeoFence, isLocationInAnyGeoFence, isLocationInGeoFence, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
 import { MqttClient } from 'mqtt/*';
@@ -263,8 +263,15 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
         }
         const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
         if (machineGroupMachine){
-            const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
-            if (geoFence && !isLocationInGeoFence(body.location, JSON.parse(geoFence.data as string))){
+            const geoFences = await MachineGroupDB.findAll({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } })
+                .then((machineGroups) => machineGroups.map((geoFence) => {
+                    const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+                    return {
+                        ...geoFenceObj,
+                        data:JSON.parse(geoFenceObj.data as string) as GeoFence,
+                    };
+                })) as MachineGroupGeoFenceJSON[];
+            if (!isLocationInAnyGeoFence(body.location, geoFences)){
                 res.status(400).json({ message: 'Invalid location' });
                 return;
             }
