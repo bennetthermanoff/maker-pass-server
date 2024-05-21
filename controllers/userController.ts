@@ -51,6 +51,8 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
                 data:geoFenceObj.data,
             };
         }) as MachineGroupGeoFenceJSON[]);
+        console.log('geoFences', geoFences, registerBody.location);
+
         if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
             res.status(400).json({ message: 'Invalid location' });
             return;
