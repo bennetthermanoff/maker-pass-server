@@ -257,7 +257,7 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             res.status(400).json({ message: 'Machine not found' });
             return;
         }
-        if (machine.enableKey && machine.enableKey !== body.enableKey && userType == 'user'){
+        if (machine.enableKey && machine.enableKey !== body.enableKey){
             res.status(400).json({ message: 'Invalid enable key' });
             return;
         }
