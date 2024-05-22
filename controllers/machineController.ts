@@ -206,7 +206,7 @@ export const deleteMachine:RequestHandler = async (req,res) => {
 export const getPermittedMachineIds = async (userId:string):Promise<string[]> => {
     const userPermissionGroups = await UserPermissionDB.findAll({ where: { userId, type: 'PERMISSIONGROUP' } }).then((permissionGroups) => permissionGroups.map((permissionGroup) => permissionGroup.toJSON())) as UserPermissionGroup[];
     const permittedMachineIds = await Promise.all(userPermissionGroups.map(async (userPermissionGroup) => {
-        const permissionGroup = await PermissionGroupDB.findAll({ where: { id: userPermissionGroup.sk } }).then((permissionGroups) => permissionGroups.map((permissionGroup) => permissionGroup.toJSON())) as PermissionGroupMachine[];
+        const permissionGroup = await PermissionGroupDB.findAll({ where: { sk: userPermissionGroup.sk, type: 'MACHINE' } }).then((permissionGroups) => permissionGroups.map((permissionGroup) => permissionGroup.toJSON())) as PermissionGroupMachine[];
         if (!permissionGroup){
             return [];
         }
