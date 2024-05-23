@@ -289,36 +289,46 @@ type UpdateUserBody = {
     newPassword: string;
 }
 export const changePassword:RequestHandler = async (req, res) => {
-    const userId = req.headers.userid as string;
-    const userType = req.headers.usertype as UserType;
-    const body = req.body as UpdateUserBody;
-    if (!userId || !userType){
-        res.status(400).json({ message: 'Missing required fields' });
+    try {
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
+        const body = req.body as UpdateUserBody;
+        if (!userId || !userType){
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        const user = await UserDB.findOne({ where: { id: userId } }).then((user) => user?.toJSON()) as User;
+        if (!user){
+            res.status(400).json({ message: 'User not found' });
+            return;
+        }
+        const newHashedPassword = bcrypt.hashSync(body.newPassword, 12);
+        await UserDB.update({ password: newHashedPassword }, { where: { id: userId } });
+        res.status(200).json({ message: 'Password updated' });
         return;
+    } catch (e){
+        res.status(500).json({ message: e });
     }
-    const user = await UserDB.findOne({ where: { id: userId } }).then((user) => user?.toJSON()) as User;
-    if (!user){
-        res.status(400).json({ message: 'User not found' });
-        return;
-    }
-    const newHashedPassword = bcrypt.hashSync(body.newPassword, 12);
-    await UserDB.update({ password: newHashedPassword }, { where: { id: userId } });
-    res.status(200).json({ message: 'Password updated' });
 };
 
 export const deleteUser:RequestHandler = async (req, res) => {
-    const userId = req.headers.userid as string;
-    const userType = req.headers.usertype as UserType;
-    const targetUserId = req.params.userId;
-    if (!userId || !userType || !targetUserId){
-        res.status(400).json({ message: 'Missing required fields' });
+    try {
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
+        const targetUserId = req.params.userId;
+        if (!userId || !userType || !targetUserId){
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        if (userType === 'admin' || userId === targetUserId){
+            await UserDB.destroy({ where: { id: targetUserId } });
+            res.status(200).json({ message: 'User deleted' });
+            return;
+        }
+        res.status(400).json({ message: 'User not authorized' });
         return;
+    } catch (e){
+        res.status(500).json({ message: e });
     }
-    if (userType === 'admin' || userId === targetUserId){
-        await UserDB.destroy({ where: { id: targetUserId } });
-        res.status(200).json({ message: 'User deleted' });
-        return;
-    }
-    res.status(400).json({ message: 'User not authorized' });
 };
 
