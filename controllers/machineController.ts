@@ -239,8 +239,6 @@ interface EnableMachineBody {
 export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler = (MqttClient) => async (req,res) => {
     try {
         const userId = req.headers.userid as string;
-        const userType = req.headers.usertype as UserType;
-
         const machineId = req.params.machineId;
         const body = req.body as EnableMachineBody;
         if (!machineId) {

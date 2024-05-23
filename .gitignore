@@ -10,6 +10,7 @@
 
 # production
 /build
+process.pid
 
 # db
 db.sqlite
