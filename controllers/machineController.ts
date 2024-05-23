@@ -86,11 +86,14 @@ export const updateMachine:RequestHandler = async (req,res) => {
         if (updateMachineBody.machine.photo){
             updateMachineBody.machine.photoHash = UUIDV4();
         }
-        MachineDB.update({
-            ...updateMachineBody.machine,
-            enableKey:updateMachineBody.requireEnableKey || machine.enableKey ? UUIDV4() : null,
-        }, { where: { id: machineId },
-        });
+        if (updateMachineBody.requireEnableKey && !machine.enableKey){
+            updateMachineBody.machine.enableKey = UUIDV4();
+        }
+        if (!updateMachineBody.requireEnableKey){
+            updateMachineBody.machine.enableKey = null;
+        }
+
+        MachineDB.update(updateMachineBody.machine, { where: { id: machineId } });
         const updatedMachine = await MachineDB.findOne({ where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         updatedMachine.photo = null;
         await LogDB.create({

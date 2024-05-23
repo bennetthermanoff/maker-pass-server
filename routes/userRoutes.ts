@@ -8,4 +8,6 @@ export const useUserRoutes = (router:Express,makerspaceConfig:MakerspaceConfig) 
     router.post(URL_BASE + '/promote/:userId/:userType', userController.authenticate, userController.changeUserType);
     router.get(URL_BASE + '/token/:userId', userController.authenticate, userController.issueNewExternalAccessToken);
     router.get(URL_BASE + '/search/:searchTerm', userController.authenticate, userController.searchForUser);
+    router.post(URL_BASE + '/changePassword', userController.authenticate, userController.changePassword);
+    router.delete(URL_BASE + '/:userId', userController.authenticate, userController.deleteUser);
 };
