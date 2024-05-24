@@ -10,6 +10,7 @@ import { GeoFence, isLocationInAnyGeoFence, isLocationInGeoFence, Location } fro
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
 import { MqttClient } from 'mqtt/*';
+const CONFIG_MACHINE_SOLENOID_TIMEOUT = 5000; // 5 seconds
 
 interface createMachineBody {
     machine:Partial<Machine>;
@@ -300,8 +301,22 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             referenceType: 'MACHINE',
             userId: userId,
         });
-        res.status(200).json({ message: 'Machine enabled', machine });
-
+        if (machine.solenoidMode){
+            setTimeout(() => {
+                if (MqttClient !== undefined && machine.mqttTopic){
+                    MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'OFF');
+                }
+                MachineDB.update({ enabled: false }, { where: { id: machineId } });
+                LogDB.create({
+                    type: 'DISABLE_MACHINE',
+                    message: JSON.stringify(machine),
+                    referenceId: machineId,
+                    referenceType: 'MACHINE',
+                    userId: userId,
+                });
+            }, CONFIG_MACHINE_SOLENOID_TIMEOUT);
+        }
+        res.status(200).json({ message: 'Machine enabled', machine }).send();
     } catch (e) {
         res.status(500).json({ message: e });
     }
@@ -327,6 +342,10 @@ export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler 
         const machine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
         if (!machine){
             res.status(400).json({ message: 'Machine not found' });
+            return;
+        }
+        if (userType === 'user' && machine.lastUsedBy !== userId){
+            res.status(400).json({ message: 'User not last user of machine' });
             return;
         }
         const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
