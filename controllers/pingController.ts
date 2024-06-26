@@ -3,6 +3,7 @@ import { MachineGroupDB } from '../models';
 import { MachineGroupGeoFence } from '../models/MachineGroupModel';
 import { MakerspaceConfig } from '../MakerspaceConfig';
 import { compareSync } from 'bcrypt';
+import { UserType } from '../models/UserModel';
 
 export const pingServer:(makerspaceConfig:MakerspaceConfig)=>RequestHandler = (makerspaceConfig) => async (req,res) => {
     const { registrationType, registrationKey } = req.body;
@@ -37,4 +38,13 @@ export const pingServer:(makerspaceConfig:MakerspaceConfig)=>RequestHandler = (m
             hasGeoFences:hasGeoFences,
 
         } });
+};
+
+export const getRegistrationKey:(makerspaceConfig:MakerspaceConfig)=>RequestHandler = (makerspaceConfig) => async (req,res) => {
+    const userType = req.headers.usertype as UserType;
+    if (userType !== 'admin' ){
+        res.status(401).json({ message:'Unauthorized' });
+        return;
+    }
+    res.status(200).json({ registrationKey:makerspaceConfig.registrationPassword });
 };

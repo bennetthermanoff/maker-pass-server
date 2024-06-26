@@ -10,12 +10,14 @@
 
 # production
 /build
+process.pid
 
 # db
 db.sqlite
 
 # Makerspace config
 MakerspaceConfig.json
+/certs/*
 
 # misc
 db.config.ts

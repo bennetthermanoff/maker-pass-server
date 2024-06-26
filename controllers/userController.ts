@@ -44,26 +44,25 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             res.status(400).json({ message: 'Email already in use' });
             return;
         }
-        if (registerBody.registrationType === 'admin'){
+        const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
+            const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+            return {
+                ...geoFenceObj,
+                data:JSON.parse(geoFenceObj.data as string) as GeoFence,
+            };
+        }) as MachineGroupGeoFenceJSON[]);
+        console.log('geoFences', geoFences, registerBody.location);
 
+        if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
+            res.status(400).json({ message: 'Invalid location' });
+            return;
+        }
+        if (registerBody.registrationType === 'admin'){
             if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword) === false) {
                 res.status(400).json({ message: 'Invalid registration key' });
 
                 return;
             }
-
-            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
-                const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
-                return {
-                    ...geoFenceObj,
-                    data:JSON.parse(geoFenceObj.data as string) as GeoFence,
-                };
-            }) as MachineGroupGeoFenceJSON[]);
-            if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
-                res.status(400).json({ message: 'Invalid location' });
-                return;
-            }
-
             UserDB.create({
                 name: registerBody.name,
                 email: registerBody.email,
@@ -81,12 +80,6 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             return;
         }
         else if (registerBody.registrationType === 'user'){
-            const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => JSON.parse(geoFence.toJSON() as string) as MachineGroupGeoFenceJSON));
-            if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){
-                res.status(400).json({ message: 'Invalid location' });
-                return;
-            }
-
             if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.registrationPassword && registerBody.registrationKey !== makerspaceConfig.adminPassword) {
                 res.status(400).json({ message: 'Invalid registration key' });
                 return;
@@ -116,6 +109,7 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
     }
     catch (error) {
         res.status(500).json({ message: error });
+        console.log(error);
     }
 };
 
@@ -290,3 +284,51 @@ export const searchForUser:RequestHandler = async (req, res) => {
         res.status(500).json({ message: e });
     }
 };
+
+type UpdateUserBody = {
+    newPassword: string;
+}
+export const changePassword:RequestHandler = async (req, res) => {
+    try {
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
+        const body = req.body as UpdateUserBody;
+        if (!userId || !userType){
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        const user = await UserDB.findOne({ where: { id: userId } }).then((user) => user?.toJSON()) as User;
+        if (!user){
+            res.status(400).json({ message: 'User not found' });
+            return;
+        }
+        const newHashedPassword = bcrypt.hashSync(body.newPassword, 12);
+        await UserDB.update({ password: newHashedPassword }, { where: { id: userId } });
+        res.status(200).json({ message: 'Password updated' });
+        return;
+    } catch (e){
+        res.status(500).json({ message: e });
+    }
+};
+
+export const deleteUser:RequestHandler = async (req, res) => {
+    try {
+        const userId = req.headers.userid as string;
+        const userType = req.headers.usertype as UserType;
+        const targetUserId = req.params.userId;
+        if (!userId || !userType || !targetUserId){
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        if (userType === 'admin' || userId === targetUserId){
+            await UserDB.destroy({ where: { id: targetUserId } });
+            res.status(200).json({ message: 'User deleted' });
+            return;
+        }
+        res.status(400).json({ message: 'User not authorized' });
+        return;
+    } catch (e){
+        res.status(500).json({ message: e });
+    }
+};
+
