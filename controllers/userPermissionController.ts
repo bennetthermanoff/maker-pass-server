@@ -39,7 +39,7 @@ type UpdatePermissionsBody = PermissionObject;
 export const updatePermissions:RequestHandler = async (req, res) => {
     try {
         const userType = req.headers.usertype as UserType;
-        if (userType !== 'admin'){
+        if (userType == 'user'){
             res.status(400).json({ message: 'User not authorized' });
             return;
         }
