@@ -21,8 +21,7 @@ fi
 if [ -d "maker-pass-server" ]; then
   echo "MakerPass is already installed. Would you like to update MakerPass? (y/n)"
   read -r response
-  if [ "$response" = "y" ];
-  then
+  if [ "$response" = "y" ]; then
     cd maker-pass-server
     PID=$(cat "$PID_FILE")
     kill $PID
@@ -56,11 +55,10 @@ sleep 5
 echo "Installing dependencies..."
 npm install
 npm start
-
+rm "process.pid"
 echo "Setup complete, would you like to add MakerPass to your crontab? (y/n) (requires sudo)"
 read -r response
-if [ "$response" = "y" ];
-then
+if [ "$response" = "y" ]; then
     PATH_TO_SCRIPT=$(pwd)
     sudo echo "* * * * * cd $PATH_TO_SCRIPT && ./mpCronJob.sh" | sudo crontab -
 echo "MakerPass added to crontab. MakerPass will now run every minute and check for updates when killed.\n"

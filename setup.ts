@@ -6,6 +6,8 @@ import { v4 } from 'uuid';
 import qrCode from 'qrcode-terminal';
 import { hashSync } from 'bcrypt';
 import { execSync } from 'child_process';
+import { UserDB, sequelize } from './models';
+import { exit } from 'process';
 
 export const setup = async () => {
     console.log('Welcome to MakerPass! Let\'s get started by setting up your MakerSpace.');
@@ -186,9 +188,10 @@ export const setup = async () => {
         type: 'toggle',
         name: 'save',
         message: 'Would you like to save this configuration?',
+        initial: true,
     });
     if (save.save){
-        const adminPassword = v4();
+
         const config: MakerspaceConfig = {
             id: v4(),
             name: setupQuestions.name,
@@ -197,12 +200,11 @@ export const setup = async () => {
             ngrokToken: setupQuestions.useNgrok ? setupQuestions.ngrokToken : undefined,
             ngrokStaticDomain: setupQuestions.ngrokDomain,
             internalServerPort: setupQuestions.internalServerPort,
-            externalServerPort: setupQuestions.differentExternalPort ? setupQuestions.externalServerPort : setupQuestions.internalServerPort,
+            externalServerPort: setupQuestions.differentExternalPort ? setupQuestions.ngrokToken ? 443 : setupQuestions.externalServerPort : setupQuestions.internalServerPort,
             mqttSecure: setupQuestions.mqttSecure,
             mqttPort: setupQuestions.mqttPort,
             mqttUsername: setupQuestions.mqttUsername,
             mqttPassword: setupQuestions.mqttPassword,
-            adminPassword: hashSync(adminPassword, 10),
             registrationPassword: v4(),
             theme: {
                 primary: setupQuestions.themePrimary,
@@ -212,21 +214,74 @@ export const setup = async () => {
         writeFileSync('MakerspaceConfig.json', JSON.stringify(config, null, 2));
         console.log('Configuration saved to MakerspaceConfig.json');
 
+        const adminEmail = await prompts({
+            type: 'text',
+            name: 'email',
+            message: 'An admin registration key will be generated. What is the email of the admin?',
+            validate: (value: string) => (RegExp('.+@.+').test(value) ? true : 'Please enter a valid email address'),
+            initial: 'admin@email.com',
+        });
+        const adminName = await prompts({
+            type: 'text',
+            name: 'name',
+            message: 'Enter the name of the admin user',
+            initial: 'Admin',
+        });
+        const adminPassword = await prompts({
+            type: 'password',
+            name: 'password',
+            message: 'Enter a password for the admin account',
+            validate: (value: string) => (value.length > 7 ? true : 'Password must be at least 8 characters'),
+        });
+        let verified = false;
+        while (!verified){
+            const verify = await prompts({
+                type: 'password',
+                name: 'password',
+                message: 'Please enter the password again to verify',
+            });
+            verified = verify.password === adminPassword.password;
+            if (!verified){
+                console.log('Passwords do not match. Please try again.');
+            }
+        }
+        await sequelize.sync();
+        const numAdmins = await UserDB.count({ where: { userType: 'admin' } });
+        if (numAdmins > 0){
+            console.log('WARNING: There is already an admin registered in the database. No new admin will be created.');
+        } else {
+            const hashedPassword = hashSync(adminPassword.password, 10);
+            await UserDB.create({ email: adminEmail.email, name:adminName.name, password: hashedPassword, userType: 'admin', additionalInfo:'{}' });
+            console.log('Admin created with email: ', adminEmail.email);
+        }
+
         await handleMqttsCerts(config);
 
         await new Promise((resolve) => setTimeout(resolve, 200));
         console.log('Generating a new admin registration key...');
         await new Promise((resolve) => setTimeout(resolve, 200));
-        console.log('Connect to the server with the following registration key, or use the QR code in the MakerPass app:');
-        console.log('Admin Registration Key: ' + adminPassword);
-        qrCode.generate(`makerpass://--/makerspace/config?url=${config.ngrokToken ? 'https://' : ''}${config.serverAddress}&port=${!config.ngrokToken ? config.externalServerPort : 443}&registrationType=admin&registrationKey=${adminPassword}`, { small: true }, (qrCode) => {
+        console.log('User Registration Key: ' + config.registrationPassword);
+        console.log('Once the server is running, you can use the following QR code to connect to the server:');
+        qrCode.generate(`makerpass://--/makerspace/config?url=${config.ngrokToken ? 'https://' : ''}${config.serverAddress}&port=${config.externalServerPort}&registrationType=user&registrationKey=${config.registrationPassword}`, { small: true }, (qrCode) => {
             console.log(qrCode);
+            exit();
         });
-        console.log('To register as admin, press and hold the submit button on the register page.');
-        console.log('DO NOT SAVE THIS KEY OR QR CODE. A non-admin registration key will be displayed when the server is started.');
 
+    } else {
+        console.log('Would you like to start over?');
+        const startOver = await prompts({
+            type: 'toggle',
+            name: 'startOver',
+            message: 'Would you like to start over?',
+            initial: true,
+        });
+        if (startOver.startOver){
+            setup();
+        } else {
+            console.log('Exiting setup...');
+            exit();
+        }
     }
-    console.log('Exiting... run `npm run forever` to bind the server via crontab and always keep it running.');
 
 };
 

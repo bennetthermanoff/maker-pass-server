@@ -9,7 +9,6 @@ export type MakerspaceConfig = {
     mqttPort: number,
     mqttUsername: string,
     mqttPassword: string,
-    adminPassword: string,
     registrationPassword: string,
     ngrokToken?: string,
     ngrokStaticDomain?: string,

@@ -57,55 +57,31 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             res.status(400).json({ message: 'Invalid location' });
             return;
         }
-        if (registerBody.registrationType === 'admin'){
-            if (!registerBody.registrationKey || bcrypt.compareSync(registerBody.registrationKey, makerspaceConfig.adminPassword) === false) {
-                res.status(400).json({ message: 'Invalid registration key' });
-
-                return;
-            }
-            UserDB.create({
-                name: registerBody.name,
-                email: registerBody.email,
-                password: bcrypt.hashSync(registerBody.password, 12),
-                userType:'admin',
-                additionalInfo: registerBody.additionalInfo,
-            });
-            const newUser = await UserDB.findOne({ where: { email:registerBody.email } }).then((user) => user?.toJSON()) as User;
-            LogDB.create({
-                type:'Admin Created',
-                message:`Admin ${registerBody.name} was created`,
-                userId: newUser.id,
-            });
-            res.status(200).json({ message:'Admin user created!' });
-            return;
-        }
-        else if (registerBody.registrationType === 'user'){
-            if (!registerBody.registrationKey || registerBody.registrationKey !== makerspaceConfig.registrationPassword && registerBody.registrationKey !== makerspaceConfig.adminPassword) {
-                res.status(400).json({ message: 'Invalid registration key' });
-                return;
-            }
-
-            UserDB.create({
-                name: registerBody.name,
-                email: registerBody.email,
-                userType:'user',
-                password: bcrypt.hashSync(registerBody.password, 12),
-                additionalInfo: registerBody.additionalInfo,
-            });
-            const newUser = await UserDB.findOne({ where: { email:registerBody.email } }).then((user) => user?.toJSON()) as User;
-            LogDB.create({
-                type:'User Created',
-                message:`User ${registerBody.name} was created`,
-                userId: newUser.id,
-            });
-            res.status(200).json({ message: 'User created!' });
-            return;
-
-        }
-        else {
+        if (registerBody.registrationType !== 'user'){
             res.status(400).json({ message: 'Invalid registration type' });
             return;
         }
+        if (registerBody.registrationKey !== makerspaceConfig.registrationPassword ) {
+            res.status(400).json({ message: 'Invalid registration key' });
+            return;
+        }
+
+        UserDB.create({
+            name: registerBody.name,
+            email: registerBody.email,
+            userType:'user',
+            password: bcrypt.hashSync(registerBody.password, 12),
+            additionalInfo: registerBody.additionalInfo,
+        });
+        const newUser = await UserDB.findOne({ where: { email:registerBody.email } }).then((user) => user?.toJSON()) as User;
+        LogDB.create({
+            type:'User Created',
+            message:`User ${registerBody.name} was created`,
+            userId: newUser.id,
+        });
+        res.status(200).json({ message: 'User created!' });
+        return;
+
     }
     catch (error) {
         res.status(500).json({ message: error });

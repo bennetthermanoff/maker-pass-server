@@ -74,7 +74,7 @@ if (!makerspaceConfig){
     };
 
     app.get('/', (req, res) => {
-        res.json({ message: 'Welcome to the Tulane Makerspace!' });
+        res.json({ message: `Welcome to the ${makerspaceConfig?.name} MakerPass!` });
     });
     app.use(express.json({ limit: '50mb' }));
     app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -94,7 +94,7 @@ if (!makerspaceConfig){
             const listener = await ngrok.connect({
                 addr: BACKEND_PORT,
                 authtoken: makerspaceConfig.ngrokToken,
-                // domain: makerspaceConfig.ngrokStaticDomain,
+                domain: makerspaceConfig.ngrokStaticDomain,
 
             });
             console.log(`Server is running on ${listener.url()}`);
