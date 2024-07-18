@@ -200,7 +200,10 @@ export const setup = async () => {
             ngrokToken: setupQuestions.useNgrok ? setupQuestions.ngrokToken : undefined,
             ngrokStaticDomain: setupQuestions.ngrokDomain,
             internalServerPort: setupQuestions.internalServerPort,
-            externalServerPort: setupQuestions.differentExternalPort ? setupQuestions.ngrokToken ? 443 : setupQuestions.externalServerPort : setupQuestions.internalServerPort,
+            externalServerPort: !setupQuestions.ngrokToken
+                ? setupQuestions.differentExternalPort
+                    ? setupQuestions.externalServerPort : setupQuestions.internalServerPort
+                : 443,
             mqttSecure: setupQuestions.mqttSecure,
             mqttPort: setupQuestions.mqttPort,
             mqttUsername: setupQuestions.mqttUsername,
