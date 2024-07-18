@@ -1,10 +1,11 @@
 /* eslint-disable no-console */
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import prompts from 'prompts';
 import { AdditionalInfoField, MakerspaceConfig } from './MakerspaceConfig';
 import { v4 } from 'uuid';
 import qrCode from 'qrcode-terminal';
 import { hashSync } from 'bcrypt';
+import { execSync } from 'child_process';
 
 export const setup = async () => {
     console.log('Welcome to MakerPass! Let\'s get started by setting up your MakerSpace.');
@@ -20,7 +21,25 @@ export const setup = async () => {
             message: 'What is the website of your MakerSpace? This is optional.',
         },
         {
-            type: 'text',
+            type: 'toggle',
+            name: 'useNgrok',
+            message: 'Would you like to use ngrok to expose your server to the internet?',
+        },
+        {
+            type: (prev) => (prev ? 'text' : null),
+            name: 'ngrokToken',
+            message: 'What is your ngrok authtoken? This is required to use ngrok.',
+            validate: (value: string) => (value.length > 0 ? true : 'Please enter a valid ngrok authtoken'),
+        },
+        {
+            type: (_prev, values) => (values.useNgrok ? 'text' : null),
+            name: 'ngrokDomain',
+            message: 'What is your ngrok static domain EX: (cool-domain.ngrok-free.app)? \nGenerate one at: https://dashboard.ngrok.com/cloud-edge/domains ',
+            validate: (value: string) => (value.length > 0 ? true : 'Please enter a valid ngrok domain'),
+
+        },
+        {
+            type: (_prev, values) => (values.useNgrok ? null : 'text'),
             name: 'serverAddress',
             message: 'What is the address of this server? This is the address users will use to connect to the server.',
             initial: 'http://localhost',
@@ -34,12 +53,13 @@ export const setup = async () => {
             validate: (value: number) => (value > 0 && value < 65536 ? true : 'Please enter a valid port number between 1 and 65535'),
         },
         {
-            type: 'toggle',
+
+            type: (_prev, values ) => (values.useNgrok ? null : 'number'),
             name: 'differentExternalPort',
             message: 'Is the external port different from the internal port?',
         },
         {
-            type: (prev: boolean) => (prev ? 'number' : null),
+            type: (_prev, values) => (values.differentExternalPort ? 'number' : null),
             name: 'externalServerPort',
             message: 'What port should the server run on externally? This is the port users will use to connect to the server.',
             initial: 8080,
@@ -53,15 +73,20 @@ export const setup = async () => {
             validate: (value: number) => (value > 0 && value < 65536 ? true : 'Please enter a valid port number between 1 and 65535'),
         },
         {
+            type: 'toggle',
+            name: 'mqttSecure',
+            message: 'Would you like to enable TLS for the MQTT server? (NOTE: Tasmota does not support TLS by default)\n You do really don\'t need to enable this unless you are exposing the MQTT server to the internet (ngrok will not do this).',
+        },
+        {
             type: 'text',
             name: 'mqttUsername',
-            message: 'Give a username to connect to the MQTT server.',
+            message: 'Give a username for devices to connect to the MQTT server.',
             initial: 'admin',
         },
         {
             type: 'text',
             name: 'mqttPassword',
-            message: 'Give a password to connect to the MQTT server.',
+            message: 'Give a password for devices to connect to the MQTT server.',
             initial: 'admin',
 
         },
@@ -168,9 +193,12 @@ export const setup = async () => {
             id: v4(),
             name: setupQuestions.name,
             website: setupQuestions.website,
-            serverAddress: setupQuestions.serverAddress,
+            serverAddress: setupQuestions.ngrokDomain ? setupQuestions.ngrokDomain : setupQuestions.serverAddress,
+            ngrokToken: setupQuestions.useNgrok ? setupQuestions.ngrokToken : undefined,
+            ngrokStaticDomain: setupQuestions.ngrokDomain,
             internalServerPort: setupQuestions.internalServerPort,
             externalServerPort: setupQuestions.differentExternalPort ? setupQuestions.externalServerPort : setupQuestions.internalServerPort,
+            mqttSecure: setupQuestions.mqttSecure,
             mqttPort: setupQuestions.mqttPort,
             mqttUsername: setupQuestions.mqttUsername,
             mqttPassword: setupQuestions.mqttPassword,
@@ -184,19 +212,21 @@ export const setup = async () => {
         writeFileSync('MakerspaceConfig.json', JSON.stringify(config, null, 2));
         console.log('Configuration saved to MakerspaceConfig.json');
 
+        await handleMqttsCerts(config);
+
         await new Promise((resolve) => setTimeout(resolve, 200));
         console.log('Generating a new admin registration key...');
         await new Promise((resolve) => setTimeout(resolve, 200));
         console.log('Connect to the server with the following registration key, or use the QR code in the MakerPass app:');
-        console.log('Admin Registration Key: ' + config.adminPassword);
-        qrCode.generate(`makerpass://--/makerspace/config?url=${config.serverAddress}&port=${config.externalServerPort}&registrationType=admin&registrationKey=${adminPassword}`, { small: true }, (qrCode) => {
+        console.log('Admin Registration Key: ' + adminPassword);
+        qrCode.generate(`makerpass://--/makerspace/config?url=${config.ngrokToken ? 'https://' : ''}${config.serverAddress}&port=${!config.ngrokToken ? config.externalServerPort : 443}&registrationType=admin&registrationKey=${adminPassword}`, { small: true }, (qrCode) => {
             console.log(qrCode);
         });
         console.log('To register as admin, press and hold the submit button on the register page.');
         console.log('DO NOT SAVE THIS KEY OR QR CODE. A non-admin registration key will be displayed when the server is started.');
 
     }
-    console.log('Exiting... run `npm run forever` to start the server');
+    console.log('Exiting... run `npm run forever` to bind the server via crontab and always keep it running.');
 
 };
 
@@ -204,4 +234,43 @@ export const printWelcome = () => {
     const consoleWidth = process.stdout.columns;
     const banner = readFileSync(consoleWidth >= 100 ? 'banner100.txt' : 'banner40.txt', 'utf8');
     console.log(banner);
+};
+
+const handleMqttsCerts = async (config:MakerspaceConfig) => {
+    if (!config.mqttSecure){
+        return;
+    }
+
+    if (existsSync('certs/server.key') && existsSync('certs/server.crt')){
+        console.log('Existing mqtt certs found. Assuming they are signed for your domain.');
+        return;
+    }
+
+    const response = await prompts([{
+        type: 'toggle',
+        name: 'generateCerts',
+        message: 'Would you like to generate new self-signed certs for mqtts?',
+    },
+    { type: 'toggle',
+        name: 'certAddress',
+        message: `Would you like to use the server address ${config.serverAddress} as the common name for the certificate?`,
+    },
+    { type: (prev) => (prev ? null : 'text'),
+        name: 'certAddress',
+        message: 'What address should be used for the certificate?',
+    }]);
+    if (!response.generateCerts){
+        return;
+    }
+    if (response.certAddress){
+        config.serverAddress = response.certAddress;
+    }
+    console.log('Generating self-signed certs for mqtts... (you need to have openssl installed)');
+    try {
+        execSync('mkdir -p certs');
+        execSync(`openssl req -nodes -new -x509 -keyout certs/server.key -out certs/server.crt -subj "/CN=${config.serverAddress}"`);
+        console.log('Certs generated and saved to certs/server.key and certs/server.crt');
+    } catch (e){
+        console.error(`Error generating certs. Make sure you have openssl installed run: \nopenssl req -nodes -new -x509 -keyout certs/server.key -out certs/server.crt -subj "/CN=${config.serverAddress}"`);
+    }
 };
