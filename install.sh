@@ -63,3 +63,5 @@ if [ "$response" = "y" ]; then
     sudo echo "* * * * * cd $PATH_TO_SCRIPT && ./mpCronJob.sh" | sudo crontab -
 echo "MakerPass added to crontab. MakerPass will now run every minute and check for updates when killed.\n"
 fi
+echo "MakerPass is now running in the background."
+nohup npm start &

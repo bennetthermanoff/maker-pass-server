@@ -11,27 +11,57 @@ MakerPass additionally hosts a MQTT server for communication with wifi relays. *
 
 MakerPass also allows for keeping track of maintenance through TagOuts.
 
-## Notice: this repository is under active development. It's not done yet!
-
 ### Installation
 
-1. Clone the repository
-2. Run `npm install` to install dependencies
-3. Run `npm start` to start the server
+To install MakerPass on a linux device (like a Raspberry Pi), make sure you have Node 20 installed by installing it via fnm:
+
+```bash
+curl -fsSL https://fnm.vercel.app/install | bash
+source ~/.bashrc
+fnm use --install-if-missing 20
+```
+
+Then, download and run the **MakerPass** installation script:
+
+```bash
+curl -o makerPassInstall.sh https://raw.githubusercontent.com/bennetthermanoff/maker-pass-server/main/install.sh
+chmod +x makerPassInstall.sh
+./makerPassInstall.sh
+```
+
+This will install the necessary dependencies, go through first time setup, and start the server.
+At the end of the installation, you will be asked if you want to add a cron job to keep the server running and enable non-breaking updates. If you do this, the server will automatically update itself when a new version is released and your raspberry pi is restarted. Additionally, the server will be restarted if it crashes.
+
+#### Manual Installation
+
+Linux is the only officially supported operating system for MakerPass, but it should work on any system that can run Node.js like so:
+
+```bash
+git clone https://github.com/bennetthermanoff.maker-pass-server.git
+cd maker-pass-server
+npm install
+npm start # will start the server and run the first time setup
+```
 
 ### Configuration and First Time Setup
 
-When the server is first started, you will be prompted to configure the server. This will be saved to `MakerspaceConfig.json` in the root directory of the repository. You can reconfigure the server at any time by deleting this file or directly editing it and restarting the server. See MakerspaceConfig.ts for type information.
+The first time you run the server, you will be prompted to set up the server. This includes setting up the admin account, the MQTT server, and the server's internet access. If you want to re-run this setup, simply delete the `MakerPassConfig.json` file in the root directory of the repository.
 
-After configuration, the admin QR code will be displayed, this allows you to register for your makerspace directly as an admin. **Do not share this QR Code. Subsequent admins can be added through the admin panel.** After restarting the server, a normal **User** QR code will be displayed. This is the QR code that users will scan to register for the makerspace.
+### Internet Access
 
-### API
+If you are planning for your server to be accessed from the internet, you can either do so manually or using ngrok. Ngrok is a lot easier and automatic, but a free Ngrok account is limited to 20,000 requests per month. If you are planning on having more than 20,000 requests per month, you will need to set up a domain and SSL certificate manually or pay for a Ngrok account (which is only $8/month).
 
-The server exposes a RESTful API for managing users and machines. All routes are defined in the Routes directory.
+### Updates
+
+If you used the installation script, the server will automatically update itself to any version apart of the same major version. If you want to update to a new major version, run install.sh inside the maker-pass-server directory. Read the release notes to see if there are any breaking changes before updating.
+
+### Security
+
+The most popular way to run MakerPass is using ngrok for the MakerPass API, and keeping the MQTT server on the local network. This network should be on a secure network as the MQTT traffic is not encrypted by default. Alternatively, MQTTS can be used with a self-signed certificate or a certificate from a certificate authority if you are hosting the MQTTS server on the internet.
 
 ### Database
 
-The server uses a SQLite database to store user and machine information. There is no need to set up a database server. The database is created in the root directory of this repository.
+The server uses a SQLite database to store user and machine information. There is no need to set up a database server. The database is created in the root directory of this repository, if you want to back it up, simply copy the database file and store it somewhere safe.
 
 ### FAQ
 
