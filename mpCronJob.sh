@@ -24,6 +24,6 @@ done
 git pull
 npm install 
 rm "$PID_FILE"
-npm run start
+npm run start > /tmp/maker-pass-server.log 2>&1 &
 
 echo "Node.js process started"

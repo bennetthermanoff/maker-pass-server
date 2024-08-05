@@ -13,12 +13,12 @@ MakerPass also allows for keeping track of maintenance through TagOuts.
 
 ### Installation
 
-To install MakerPass on a linux device (like a Raspberry Pi), make sure you have Node 20 installed by installing it via fnm:
+To install MakerPass on a debian based device (like a Raspberry Pi), make sure you have Node 20 installed by installing it via fnm:
 
 ```bash
-curl -fsSL https://fnm.vercel.app/install | bash
-source ~/.bashrc
-fnm use --install-if-missing 20
+curl -fsSL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+sudo -E bash nodesource_setup.sh
+sudo apt-get install -y nodejs
 ```
 
 Then, download and run the **MakerPass** installation script:
@@ -31,6 +31,7 @@ chmod +x makerPassInstall.sh
 
 This will install the necessary dependencies, go through first time setup, and start the server.
 At the end of the installation, you will be asked if you want to add a cron job to keep the server running and enable non-breaking updates. If you do this, the server will automatically update itself when a new version is released and your raspberry pi is restarted. Additionally, the server will be restarted if it crashes.
+Please make sure node is accessible by root for the cronjob to work! run `sudo node -v` to verify.
 
 #### Manual Installation
 
