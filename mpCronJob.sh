@@ -29,6 +29,9 @@ git checkout $LATEST_TAG_WITH_SAME_MAJOR_VERSION
 echo "Updated MakerPass to release $LATEST_TAG_WITH_SAME_MAJOR_VERSION."
 npm install 
 rm "$PID_FILE"
-npm run start > /tmp/maker-pass-server.log 2>&1 &
+if [ ! -d "/tmp/maker-pass-server" ]; then
+    mkdir /tmp/maker-pass-server
+fi
+npm run start > /tmp/maker-pass-server/log-$(date +%Y-%m-%d_%H-%M-%S).log 2>&1 &
 
 echo "Node.js process started"
