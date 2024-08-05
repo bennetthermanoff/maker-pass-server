@@ -21,7 +21,12 @@ while ! ping -c 1 1.1.1.1; do
     echo "No internet connection. Retrying in 5 seconds..."
     sleep 5
 done
-git pull
+git fetch --tags
+CURRENT_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+MAJOR_VERSION=$(echo $CURRENT_TAG | cut -d. -f1)
+LATEST_TAG_WITH_SAME_MAJOR_VERSION=$(git tag -l "$MAJOR_VERSION.*" | tail -n 1)
+git checkout $LATEST_TAG_WITH_SAME_MAJOR_VERSION
+echo "Updated MakerPass to release $LATEST_TAG_WITH_SAME_MAJOR_VERSION."
 npm install 
 rm "$PID_FILE"
 npm run start > /tmp/maker-pass-server.log 2>&1 &
