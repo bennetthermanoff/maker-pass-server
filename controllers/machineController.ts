@@ -6,7 +6,7 @@ import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { MachineGroupGeoFence, MachineGroupGeoFenceJSON, MachineGroupMachine } from '../models/MachineGroupModel';
-import { GeoFence, isLocationInAnyGeoFence, isLocationInGeoFence, Location } from '../util/locationCheck';
+import { GeoFence, isLocationInAnyGeoFence, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
 import { MqttClient } from 'mqtt/*';
@@ -322,14 +322,13 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
     }
 };
 
-interface DisableMachineBody extends EnableMachineBody {}
+// interface DisableMachineBody extends EnableMachineBody {}
 export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler = (MqttClient) => async (req,res) => {
     try {
         const userId = req.headers.userid as string;
         const userType = req.headers.usertype as UserType;
 
         const machineId = req.params.machineId;
-        const body = req.body as DisableMachineBody;
         if (!machineId) {
             res.status(400).json({ message: 'Missing required fields' });
             return;
@@ -348,14 +347,14 @@ export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler 
             res.status(400).json({ message: 'User not last user of machine' });
             return;
         }
-        const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
-        if (machineGroupMachine){
-            const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
-            if (geoFence && !isLocationInGeoFence(body.location, JSON.parse(geoFence.data as string)) && userType == 'user'){
-                res.status(400).json({ message: 'Invalid location' });
-                return;
-            }
-        }
+        // const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
+        // if (machineGroupMachine){
+        //     const geoFence = await MachineGroupDB.findOne({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupGeoFence;
+        //     if (geoFence && !isLocationInGeoFence(body.location, JSON.parse(geoFence.data as string)) && userType == 'user'){
+        //         res.status(400).json({ message: 'Invalid location' });
+        //         return;
+        //     }
+        // }
         if (MqttClient !== undefined && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'OFF');
         }
