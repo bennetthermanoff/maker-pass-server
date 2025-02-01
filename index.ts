@@ -17,6 +17,7 @@ import { printWelcome, setup } from './setup';
 import { readFileSync } from 'fs';
 import { MakerspaceConfig } from './MakerspaceConfig';
 import { createServer } from 'net';
+import { periodicQuery } from './util/periodicQuery';
 export const app = express();
 
 printWelcome();
@@ -111,6 +112,6 @@ if (!makerspaceConfig){
         }
 
     });
+    setInterval(periodicQuery, 1000 * 60 * 2);
 
 }
-
