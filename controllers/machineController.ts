@@ -5,7 +5,7 @@ import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
-import { MachineGroupGeoFence, MachineGroupGeoFenceJSON, MachineGroupMachine } from '../models/MachineGroupModel';
+import { GroupGeoFence, GroupGeoFenceJSON, MachineGroup, MachineGroupMachine, ShopLocation } from '../models/MachineGroupModel';
 import { GeoFence, isLocationInAnyGeoFence, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
@@ -265,14 +265,20 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
         }
         const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
         if (machineGroupMachine){
-            const geoFences = await MachineGroupDB.findAll({ where: { sk: machineGroupMachine?.sk, type: 'GEOFENCE' } })
+            const machineGroup = await MachineGroupDB.findOne({ where: { id: machineGroupMachine.sk, type: 'GROUP' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroup;
+            if (!machineGroup){
+                res.status(400).json({ message: 'Machine group not found' });
+                return;
+            }
+            const location = await MachineGroupDB.findOne({ where: { id: machineGroup.sk, type: 'LOCATION' } }).then((machineGroup) => machineGroup?.toJSON()) as ShopLocation;
+            const geoFences = await MachineGroupDB.findAll({ where: { sk: [location?.id, machineGroup.id], type: 'GEOFENCE' } })
                 .then((machineGroups) => machineGroups.map((geoFence) => {
-                    const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+                    const geoFenceObj = geoFence.toJSON() as GroupGeoFence;
                     return {
                         ...geoFenceObj,
                         data:JSON.parse(geoFenceObj.data as string) as GeoFence,
                     };
-                })) as MachineGroupGeoFenceJSON[];
+                })) as GroupGeoFenceJSON[];
             if (!isLocationInAnyGeoFence(body.location, geoFences)){
                 res.status(400).json({ message: 'Invalid location' });
                 return;

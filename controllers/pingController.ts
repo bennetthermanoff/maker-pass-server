@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { MachineGroupDB } from '../models';
-import { MachineGroupGeoFence } from '../models/MachineGroupModel';
+import { GroupGeoFence } from '../models/MachineGroupModel';
 import { MakerspaceConfig } from '../MakerspaceConfig';
 import { UserType } from '../models/UserModel';
 
@@ -18,7 +18,7 @@ export const pingServer:(makerspaceConfig:MakerspaceConfig)=>RequestHandler = (m
         res.status(400).json({ message:'Invalid registration key' });
         return;
     }
-    const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => geoFence.toJSON() as MachineGroupGeoFence));
+    const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => geoFence.toJSON() as GroupGeoFence));
     const hasGeoFences = geoFences.length > 0;
     res.status(200).json({ message:'Server Found!',
         registrationType:registrationType,

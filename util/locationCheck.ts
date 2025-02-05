@@ -1,4 +1,4 @@
-import {  MachineGroupGeoFenceJSON } from '../models/MachineGroupModel';
+import {  GroupGeoFenceJSON } from '../models/MachineGroupModel';
 
 export type Location = {
     lat: number,
@@ -9,7 +9,7 @@ export type GeoFence = {
     lng: number,
     radius: number,
 };
-export const isLocationInAnyGeoFence = (location:Location|undefined, machineGroupGeoFences:Array<MachineGroupGeoFenceJSON>) => {
+export const isLocationInAnyGeoFence = (location:Location|undefined, machineGroupGeoFences:Array<GroupGeoFenceJSON>) => {
     if (machineGroupGeoFences.length == 0){
         return true;
     }
