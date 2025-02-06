@@ -1,6 +1,6 @@
 import { RequestHandler } from 'express';
 import { LogDB, PermissionGroupDB } from '../models';
-import { PermissionGroup, PermissionGroupEntry, PermissionGroupMachine } from '../models/PermissionGroupModel';
+import { PermissionGroup, PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { UserType } from '../models/UserModel';
 
 type PermissionGroupObject = {
@@ -11,20 +11,14 @@ type PermissionGroupObject = {
 }
 export const getPermissionGroups:RequestHandler = async (req, res) => {
     try {
-        const permissionGroupEntries = await PermissionGroupDB.findAll().then((permissionGroups) => permissionGroups.map((permissionGroup) => permissionGroup.toJSON())) as PermissionGroupEntry[];
         const permissionGroupObject:PermissionGroupObject = {};
-        permissionGroupEntries.forEach((permissionGroupEntry) => {
-            if (permissionGroupEntry.type === 'GROUP'){
-                const permissionGroup = permissionGroupEntry as PermissionGroup;
-                permissionGroupObject[permissionGroup.id] = {
-                    name: permissionGroup.data,
-                    machineIds: [],
-                };
-            }
-            else if (permissionGroupEntry.type === 'MACHINE'){
-                const permissionGroupMachine = permissionGroupEntry as PermissionGroupMachine;
-                permissionGroupObject[permissionGroupMachine.sk].machineIds.push(permissionGroupMachine.data);
-            }
+        const groups = await PermissionGroupDB.findAll({ where: { type:'GROUP' } }).then((groups) => groups.map((group) => group.toJSON())) as PermissionGroup[];
+        const machines = await PermissionGroupDB.findAll({ where: { type:'MACHINE' } }).then((machines) => machines.map((machine) => machine.toJSON())) as PermissionGroupMachine[];
+        groups.forEach((group) => {
+            permissionGroupObject[group.id] = { name:group.data, machineIds:[] };
+        });
+        machines.forEach((machine) => {
+            permissionGroupObject[machine.sk].machineIds.push(machine.data);
         });
         res.status(200).json(permissionGroupObject);
     } catch (error) {
