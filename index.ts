@@ -18,6 +18,7 @@ import { readFileSync } from 'fs';
 import { MakerspaceConfig } from './MakerspaceConfig';
 import { createServer } from 'net';
 import { periodicQuery } from './util/periodicQuery';
+import { useLocationRoutes } from './routes/locationRoutes';
 export const app = express();
 
 printWelcome();
@@ -85,6 +86,7 @@ if (!makerspaceConfig){
     usePermissionGroupRoutes(app);
     useUserPermissionRoutes(app);
     useMachineGroupRoutes(app);
+    useLocationRoutes(app);
     useTagOutRoutes(app);
 
     sequelize.sync();
