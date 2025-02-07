@@ -228,7 +228,7 @@ export const getAllMachineGroups:RequestHandler = async (req, res) => {
             machineGroupMap[machineGroupMachine.sk].machineIds.push(machineGroupMachine.data);
         });
         machineGroupGeoFences.forEach((machineGroupGeoFence) => {
-            machineGroupMap[machineGroupGeoFence.sk].geoFences.push(JSON.parse(machineGroupGeoFence.data as string));
+            machineGroupMap[machineGroupGeoFence.sk]?.geoFences.push(JSON.parse(machineGroupGeoFence.data as string));
         });
         res.status(200).json(machineGroupMap);
 
