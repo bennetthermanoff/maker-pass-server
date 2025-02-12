@@ -6,7 +6,7 @@ import { GroupGeoFence, MachineGroup, ShopLocation } from '../models/MachineGrou
 
 type CreateLocationGroupBody = {
     name:string;
-    groupIds:string[];
+    groups:string[];
     geoFences:GeoFence[];
 };
 export const createLocation:RequestHandler = async (req, res) => {
@@ -27,7 +27,7 @@ export const createLocation:RequestHandler = async (req, res) => {
             data:createLocationGroupBody.name,
         }).then((location) => location.toJSON());
         const locationId = location.id;
-        if (createLocationGroupBody.groupIds){
+        if (createLocationGroupBody.groups){
             //edit sk of groups
             await MachineGroupDB.update({
                 sk:locationId,
@@ -35,7 +35,7 @@ export const createLocation:RequestHandler = async (req, res) => {
                 where:{
                     type:'GROUP',
                     id:{
-                        [Op.in]:createLocationGroupBody.groupIds,
+                        [Op.in]:createLocationGroupBody.groups,
                     },
                 },
             });
@@ -62,7 +62,7 @@ export const createLocation:RequestHandler = async (req, res) => {
 
 type UpdateLocationBody = {
     name:string;
-    groupIds:string[];
+    groups:string[];
     geoFences:GeoFence[];
 };
 export const updateLocation:RequestHandler = async (req, res) => {
@@ -83,7 +83,7 @@ export const updateLocation:RequestHandler = async (req, res) => {
                 },
             });
         }
-        if (updateLocationBody.groupIds){
+        if (updateLocationBody.groups){
             //edit sk of groups
             const currentGroups = await MachineGroupDB.findAll({
                 where:{
@@ -92,8 +92,8 @@ export const updateLocation:RequestHandler = async (req, res) => {
                 },
             }).then((groups) => groups.map((group) => group.toJSON())) as MachineGroup[];
             const currentGroupIds = currentGroups.map((group) => group.id);
-            const groupsToDelete = currentGroupIds.filter((groupId) => !updateLocationBody.groupIds.includes(groupId));
-            const groupsToAdd = updateLocationBody.groupIds.filter((groupId) => !currentGroupIds.includes(groupId));
+            const groupsToDelete = currentGroupIds.filter((groupId) => !updateLocationBody.groups.includes(groupId));
+            const groupsToAdd = updateLocationBody.groups.filter((groupId) => !currentGroupIds.includes(groupId));
             await MachineGroupDB.update({
                 sk:null,
             }, {
