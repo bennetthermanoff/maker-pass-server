@@ -13,7 +13,8 @@ export const useMachineRoutes = (router:Express, MQTTClient: MqttClient|undefine
     router.delete   (URL_BASE + '/single/:machineId', authenticate, machineController.deleteMachine);
     router.get      (URL_BASE + '/permitted/:userId', authenticate, machineController.getPermittedMachineIdsRoute);
     router.post     (URL_BASE + '/enable/single/:machineId', authenticate, machineController.enableMachine(MQTTClient));
-    router.get     (URL_BASE + '/disable/single/:machineId', authenticate, machineController.disableMachine(MQTTClient));
+    router.get      (URL_BASE + '/disable/single/:machineId', authenticate, machineController.disableMachine(MQTTClient));
+    router.get      (URL_BASE + '/geofences/:machineId', authenticate, machineController.getMachineGeofenceLocation);
     // router.post     (URL_BASE + '/disable/all', authenticate, machineController.disableAllMachines(MQTTClient)); Not implemented on the frontend yet
     // router.post     (URL_BASE + '/disable/group/:groupId', authenticate, machineController.disableAllMachinesByGroupId)(MQTTClient);
 };

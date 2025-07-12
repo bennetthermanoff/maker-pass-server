@@ -5,8 +5,7 @@ import { Machine } from '../models/MachineModel';
 import { UserPermissionGroup } from '../models/UserPermissionModel';
 import { PermissionGroupMachine } from '../models/PermissionGroupModel';
 import { User, UserType } from '../models/UserModel';
-import { GroupGeoFence, GroupGeoFenceJSON, MachineGroup, MachineGroupMachine, ShopLocation } from '../models/MachineGroupModel';
-import { GeoFence, isLocationInAnyGeoFence, Location } from '../util/locationCheck';
+import { isLocationInAnyGeoFence, isMachineRequiresLocation, Location } from '../util/locationCheck';
 import { Op } from 'sequelize';
 import { TagOut } from '../models/TagOutModel';
 import { MqttClient } from 'mqtt/*';
@@ -263,25 +262,14 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
             res.status(400).json({ message: 'Invalid enable key' });
             return;
         }
-        const machineGroupMachine = await MachineGroupDB.findOne({ where: { data: machine.id, type: 'MACHINE' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroupMachine;
-        if (machineGroupMachine){
-            const machineGroup = await MachineGroupDB.findOne({ where: { id: machineGroupMachine.sk, type: 'GROUP' } }).then((machineGroup) => machineGroup?.toJSON()) as MachineGroup;
-            if (!machineGroup){
-                res.status(400).json({ message: 'Machine group not found' });
-                return;
+
+        const [machineRequiresLocation, machineGroupGeoFences] = await isMachineRequiresLocation(machineId);
+        if (machineRequiresLocation){
+            if (!body.location){
+                res.status(400).json({ message: 'Machine requires location' });
             }
-            const location = await MachineGroupDB.findOne({ where: { id: machineGroup.sk, type: 'LOCATION' } }).then((machineGroup) => machineGroup?.toJSON()) as ShopLocation;
-            const geoFences = await MachineGroupDB.findAll({ where: { sk: [location?.id, machineGroup.id], type: 'GEOFENCE' } })
-                .then((machineGroups) => machineGroups.map((geoFence) => {
-                    const geoFenceObj = geoFence.toJSON() as GroupGeoFence;
-                    return {
-                        ...geoFenceObj,
-                        data:JSON.parse(geoFenceObj.data as string) as GeoFence,
-                    };
-                })) as GroupGeoFenceJSON[];
-            if (!isLocationInAnyGeoFence(body.location, geoFences)){
+            else if (!isLocationInAnyGeoFence(body.location, machineGroupGeoFences)){
                 res.status(400).json({ message: 'Invalid location' });
-                return;
             }
         }
 
@@ -377,6 +365,22 @@ export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler 
         res.status(200).json({ message: 'Machine disabled', machine:updatedMachine });
     } catch (e) {
         res.status(500).json({ message: e });
+    }
+};
+
+export const getMachineGeofenceLocation:RequestHandler = async (req,res) => {
+    try {
+        const machineId = req.params.machineId;
+        const [requiresLocation, machineGroupGeoFences] = await isMachineRequiresLocation(machineId);
+        if (!requiresLocation){
+            res.status(200).json({ inGeoFence:false, geoFences:[] });
+            return;
+        }
+        res.status(200).json({ inGeoFence: true, geoFences: machineGroupGeoFences });
+        return;
+    } catch (e) {
+        res.status(500).json({ message: e });
+        return;
     }
 };
 
