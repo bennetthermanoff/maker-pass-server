@@ -4,12 +4,30 @@
 
 This repository contains the server-side code for the MakerPass system. MakerPass is built to be self-hosted, with the app connecting to makerspace servers directly.
 
-<img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/2a79122d-cfee-4ce3-8926-d70b1ebfc716" width="200">
-<img src="https://github.com/bennetthermanoff/maker-pass-server/assets/19416922/05885f6a-c096-4081-887a-a732a42fce99" width="200">
+<img width="200" alt="Home Screen" src="https://github.com/user-attachments/assets/60d9229a-6954-4805-b615-f3d7f50319dd" />
+<img width="200" alt="Machine Catalog" src="https://github.com/user-attachments/assets/4afe785a-8cb0-435e-9e50-0cb32d34920b" />
+<img width="200" alt="Train User Screen" src="https://github.com/user-attachments/assets/dbde80e7-22b4-48f5-aadd-8b1f12a0e26e" />
+<img width="200" alt="Location Selection" src="https://github.com/user-attachments/assets/3bb6d481-77da-4d3e-9dd7-73cbfa30f415" />
 
 MakerPass additionally hosts a MQTT server for communication with wifi relays. **The primary purpose of MakerPass is to only allow certain user's access to certain tools.** At the Tulane Makerspace, users must be trained on each tool, and with MakerPass, they are able to turn on the power to their authorized machines.
 
-MakerPass also allows for keeping track of maintenance through TagOuts.
+### Features
+
+With MakerPass **users** can...
+- Enable only the machines they have been trained on (wifi-relays)
+- Browse the catalog of machines and trainings at your makerspace
+- Use trainings to access similar machines across campus locations
+
+With MakerPass **technicians** can...
+- TagOut machines that are acting up
+- Keep a log of machine issues
+- Give trainings to users
+
+With MakerPass **admins** can...
+- See and manage their entire makerspace catalog in one place
+- Sleep well at night knowing machine access is locked to those who know what to do!
+
+MakerPass was originally built for a large campus with multiple shop locations, but anyone can use it for shops big and small!
 
 ### Support
 
