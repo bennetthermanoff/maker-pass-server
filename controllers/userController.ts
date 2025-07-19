@@ -2,7 +2,7 @@ import { MachineGroupDB, UserDB, LogDB, UserPermissionDB } from '../models';
 import { RequestHandler } from 'express';
 import bcrypt from 'bcrypt';
 import { GeoFence, isLocationInAnyGeoFence } from '../util/locationCheck';
-import { MachineGroupGeoFence, MachineGroupGeoFenceJSON } from '../models/MachineGroupModel';
+import { GroupGeoFence, GroupGeoFenceJSON } from '../models/MachineGroupModel';
 import { User, UserType } from '../models/UserModel';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
@@ -45,12 +45,12 @@ export const register: (makerspaceConfig:MakerspaceConfig)=>RequestHandler = (ma
             return;
         }
         const geoFences = await MachineGroupDB.findAll({ where:{ type:'GEOFENCE' } }).then((geoFences) => geoFences.map((geoFence) => {
-            const geoFenceObj = geoFence.toJSON() as MachineGroupGeoFence;
+            const geoFenceObj = geoFence.toJSON() as GroupGeoFence;
             return {
                 ...geoFenceObj,
                 data:JSON.parse(geoFenceObj.data as string) as GeoFence,
             };
-        }) as MachineGroupGeoFenceJSON[]);
+        }) as GroupGeoFenceJSON[]);
         console.log('geoFences', geoFences, registerBody.location);
 
         if (!isLocationInAnyGeoFence(registerBody.location, geoFences)){

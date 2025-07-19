@@ -1,7 +1,7 @@
 import { RequestHandler } from 'express';
 import { LogDB, MachineGroupDB } from '../models';
 import { GeoFence } from '../util/locationCheck';
-import { MachineGroup, MachineGroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
+import { MachineGroup, GroupGeoFence, MachineGroupMachine } from '../models/MachineGroupModel';
 import { Op } from 'sequelize';
 
 type CreateMachineGroupBody = {
@@ -195,7 +195,7 @@ export const getMachineGroup:RequestHandler = async (req, res) => {
                 type:'GEOFENCE',
                 sk:machineGroupId,
             },
-        }).then((machineGroupGeoFences): MachineGroupGeoFence[] => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as MachineGroupGeoFence[];
+        }).then((machineGroupGeoFences): GroupGeoFence[] => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as GroupGeoFence[];
         res.status(200).json({ machineGroup:machineGroup, machineGroupMachines:machineGroupMachines, machineGroupGeoFences:machineGroupGeoFences });
     }
     catch (error) {
@@ -219,7 +219,7 @@ export const getAllMachineGroups:RequestHandler = async (req, res) => {
             where:{
                 type:'GEOFENCE',
             },
-        }).then((machineGroupGeoFences) => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as MachineGroupGeoFence[];
+        }).then((machineGroupGeoFences) => machineGroupGeoFences.map((machineGroupGeoFence) => machineGroupGeoFence.toJSON())) as GroupGeoFence[];
         const machineGroupMap = machineGroups.reduce((machineGroupObject, machineGroup) => {
             machineGroupObject[machineGroup.id] = { name:machineGroup.data, machineIds:[], geoFences:[] };
             return machineGroupObject;
@@ -228,7 +228,7 @@ export const getAllMachineGroups:RequestHandler = async (req, res) => {
             machineGroupMap[machineGroupMachine.sk].machineIds.push(machineGroupMachine.data);
         });
         machineGroupGeoFences.forEach((machineGroupGeoFence) => {
-            machineGroupMap[machineGroupGeoFence.sk].geoFences.push(JSON.parse(machineGroupGeoFence.data as string));
+            machineGroupMap[machineGroupGeoFence.sk]?.geoFences.push(JSON.parse(machineGroupGeoFence.data as string));
         });
         res.status(200).json(machineGroupMap);
 
