@@ -9,11 +9,12 @@ export type PermissionObject = {groups:{id:string; permission:boolean;}[], machi
 export const getPermissions:RequestHandler = async (req, res) => {
     try {
         const userType = req.headers.usertype as UserType;
-        if (userType == 'user'){
+        const userId = req.headers.userid as string;
+        const requestUserId = req.params.userId;
+        if (userType == 'user' && userId !== requestUserId){
             res.status(400).json({ message: 'User not authorized' });
             return;
         }
-        const requestUserId = req.params.userId;
         const user = await UserDB.findOne({ where: { id: requestUserId } }).then((user) => user?.toJSON()) as User;
         if (!user){
             res.status(400).json({ message: 'User not found' });
