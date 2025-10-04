@@ -2,6 +2,8 @@
 
 ### MakerPass is an iOS/Android app for managing access to machines in makerspaces. It is a successor of the Tulane Makerspace Card Reader System built for _any_ makerspace
 
+## [Now available on the Apple App Store!](https://apps.apple.com/eg/app/makerpass/id6480350973) Android coming [soon](https://github.com/bennetthermanoff/maker-pass-expo)
+
 This repository contains the server-side code for the MakerPass system. MakerPass is built to be self-hosted, with the app connecting to makerspace servers directly.
 
 <img width="200" alt="Home Screen" src="https://github.com/user-attachments/assets/60d9229a-6954-4805-b615-f3d7f50319dd" />
