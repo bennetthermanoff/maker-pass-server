@@ -21,3 +21,6 @@ export const PermissionGroupDB = sequelize.define('permissionGroup', permissionG
 export const TagOutDB = sequelize.define('tagOut', tagOutModel);
 export const UserPermissionDB = sequelize.define('userPermissions', userPermissionModel);
 
+LogDB.belongsTo(UserDB, { foreignKey: 'userId', as: 'user' });
+UserDB.hasMany(LogDB, { foreignKey: 'userId', as: 'logs' });
+
