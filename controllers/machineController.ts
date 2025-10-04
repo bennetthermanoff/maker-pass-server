@@ -287,14 +287,17 @@ export const enableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler =
         if (MqttClient !== undefined && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'ON');
         }
-        await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
-        await LogDB.create({
-            type: 'ENABLE_MACHINE',
-            message: JSON.stringify(machine),
-            referenceId: machineId,
-            referenceType: 'MACHINE',
-            userId: userId,
-        });
+
+        if (!machine.enabled || machine.lastUsedBy !== userId){
+            await MachineDB.update({ enabled: true, lastUsedBy: userId }, { where: { id: machineId } });
+            await LogDB.create({
+                type: 'ENABLE_MACHINE',
+                message: JSON.stringify(machine),
+                referenceId: machineId,
+                referenceType: 'MACHINE',
+                userId: userId,
+            });
+        }
         if (machine.solenoidMode){
             setTimeout(() => {
                 if (MqttClient !== undefined && machine.mqttTopic){
@@ -352,14 +355,16 @@ export const disableMachine:(MQTTClient: MqttClient|undefined) =>RequestHandler 
         if (MqttClient !== undefined && machine.mqttTopic){
             MqttClient.publish(`cmnd/${machine.mqttTopic}/Power`, 'OFF');
         }
-        await MachineDB.update({ enabled: false }, { where: { id: machineId } });
-        await LogDB.create({
-            type: 'DISABLE_MACHINE',
-            message: JSON.stringify(machine),
-            referenceId: machineId,
-            referenceType: 'MACHINE',
-            userId: userId,
-        });
+        if (machine.enabled){
+            await MachineDB.update({ enabled: false }, { where: { id: machineId } });
+            await LogDB.create({
+                type: 'DISABLE_MACHINE',
+                message: JSON.stringify(machine),
+                referenceId: machineId,
+                referenceType: 'MACHINE',
+                userId: userId,
+            });
+        }
         const updatedMachine = await MachineDB.findOne({ attributes: { exclude:['photo'] }, where: { id: machineId } }).then((machine) => machine?.toJSON()) as Machine;
 
         res.status(200).json({ message: 'Machine disabled', machine:updatedMachine });
