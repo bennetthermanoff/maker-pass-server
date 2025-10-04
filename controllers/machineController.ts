@@ -384,6 +384,42 @@ export const getMachineGeofenceLocation:RequestHandler = async (req,res) => {
     }
 };
 
+export const getMachineBlameList:RequestHandler = async (req,res) => {
+    try {
+        const machineId = req.params.machineId;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const userType = req.headers.usertype as UserType;
+
+        if (userType === 'user'){
+            res.status(400).json({ message: 'Not authorized' });
+            return;
+        }
+
+        if (!machineId) {
+            res.status(400).json({ message: 'Missing required fields' });
+            return;
+        }
+        const blameLog = await LogDB.findAll({
+            attributes: ['id', 'type', 'userId', 'createdAt'],
+            where:{
+                type: { [Op.in]: ['ENABLE_MACHINE', 'DISABLE_MACHINE'] },
+                referenceId: machineId,
+            },
+            include: [{
+                model: UserDB,
+                as: 'user',
+                attributes: ['name'],
+            }],
+            order: [['createdAt', 'DESC']],
+            limit,
+        });
+
+        res.status(200).json(blameLog);
+    } catch (e) {
+        res.status(500).json({ message: e });
+    }
+};
+
 // export const disableAllMachines:(MQTTClient: MqttClient|undefined) =>RequestHandler = async (req,res) => {
 //     try {
 //         const userId = req.headers.userid as string;
