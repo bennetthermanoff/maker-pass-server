@@ -16,7 +16,7 @@ import { useTagOutRoutes } from './routes/tagOutRoutes';
 import { printWelcome, setup } from './setup';
 import { readFileSync } from 'fs';
 import { MakerspaceConfig } from './MakerspaceConfig';
-import { createServer } from 'net';
+import { createServer, Socket } from 'net';
 import { periodicQuery } from './util/periodicQuery';
 import { useLocationRoutes } from './routes/locationRoutes';
 export const app = express();
@@ -66,7 +66,8 @@ if (!makerspaceConfig){
         useMachineRoutes(app, MQTTClient);
     });
     aedes.authenticate = (client, username, password, callback) => {
-        console.log('Authenticating MQTT client: ', client.id);
+        const conn = client.conn as Socket;
+        console.log(`Authenticating MQTT client: ${client.id}${conn?.remoteAddress}`);
 
         if (makerspaceConfig && username === makerspaceConfig.mqttUsername && password?.toString() === makerspaceConfig.mqttPassword) {
             callback(null, true);
